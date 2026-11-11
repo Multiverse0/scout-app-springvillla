@@ -1,0 +1,12 @@
+# Private SearXNG instance for Scout (not exposed to the internet). Docs: https://docs.searxng.org
+use_default_settings: true
+server:
+  secret_key: "CHANGE_ME_SECRET"
+  limiter: false
+  image_proxy: false
+  public_instance: false
+search:
+  safe_search: 0
+  formats:
+    - html
+    - json

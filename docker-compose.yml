@@ -1,0 +1,45 @@
+# Scout on a Linux server:   ./setup-server.sh   (or: docker compose up -d --build)
+services:
+  scout:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - HOST=0.0.0.0
+      - WA_URL=http://wa:3001
+      - SEARXNG_URL=http://searxng:8080
+      - SCOUT_DATA_DIR=/data
+    volumes:
+      - ./data:/data
+    ports:
+      - "${SCOUT_PORT:-8000}:8000"
+  wa:
+    build: ./wa-service
+    restart: unless-stopped
+    environment:
+      - WA_HOST=0.0.0.0
+      - PORT=3001
+      - SCOUT_URL=http://scout:8000
+      - SESSION_DIR=/session
+      - WA_SECRET=${WA_SECRET}
+    volumes:
+      - ./data/wa-session:/session
+    shm_size: "1gb"
+  searxng:            # your own free search engine (Google/Bing/DuckDuckGo/Brave), private to Scout
+    image: searxng/searxng:latest
+    restart: unless-stopped
+    environment:
+      - SEARXNG_BASE_URL=http://searxng:8080/
+    volumes:
+      - ./searxng:/etc/searxng
+  # Optional HTTPS with your own domain:  set DOMAIN in .env, then  docker compose --profile https up -d
+  caddy:
+    image: caddy:2
+    profiles: ["https"]
+    restart: unless-stopped
+    command: caddy reverse-proxy --from ${DOMAIN:-localhost} --to scout:8000
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./data/caddy:/data

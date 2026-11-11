@@ -1,0 +1,863 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scout</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f7f9;--panel:#fff;--panel2:#f1f3f6;--line:#e4e7ec;--text:#0f1729;--muted:#667085;
+  --accent:#16a34a;--accent2:#dcfce7;--blue:#2563eb;--blue2:#dbeafe;--warn:#b45309;--warn2:#fef3c7;
+  --red:#dc2626;--red2:#fee2e2;--violet:#7c3aed;--violet2:#ede9fe;--shadow:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.08);--radius:12px;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0b0f17;--panel:#121826;--panel2:#1a2233;--line:#232d40;--text:#e6e9ef;--muted:#8b95a7;
+  --accent:#22c55e;--accent2:#0f2e1c;--blue:#60a5fa;--blue2:#172a46;--warn:#fbbf24;--warn2:#3a2c0b;
+  --red:#f87171;--red2:#3b1414;--violet:#a78bfa;--violet2:#271d45;--shadow:0 1px 2px rgba(0,0,0,.4);
+}}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+a{color:var(--blue);text-decoration:none}
+.app{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
+nav{background:var(--panel);border-right:1px solid var(--line);padding:20px 12px;position:sticky;top:0;height:100vh}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;padding:0 10px 22px}
+.logo i{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--accent),#0ea5e9);display:grid;place-items:center;color:#fff;font-style:normal}
+nav button{all:unset;display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;padding:9px 12px;border-radius:8px;color:var(--muted);cursor:pointer;font-weight:500;margin-bottom:2px}
+nav button:hover{background:var(--panel2);color:var(--text)}
+nav button.on{background:var(--accent2);color:var(--accent)}
+nav .count{margin-left:auto;font-size:12px;background:var(--panel2);padding:1px 8px;border-radius:99px}
+nav .count.hot{background:var(--red);color:#fff}
+.engine-mini{margin-top:18px;padding:10px 12px;border-radius:10px;background:var(--panel2);font-size:12px;color:var(--muted);line-height:1.6}
+main{padding:28px 32px;max-width:1280px;width:100%}
+h1{font-size:22px;margin:0 0 4px}.sub{color:var(--muted);margin:0 0 22px}
+h2{font-size:15px;margin:0 0 12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
+.grid{display:grid;gap:14px}.g5{grid-template-columns:repeat(5,1fr)}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}
+.kpi .n{font-size:28px;font-weight:700;margin-top:6px}.kpi .l{color:var(--muted);font-size:13px}
+.btn{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;font-weight:600;font-size:13px;background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+.btn:hover{filter:brightness(.97)}.btn.primary{background:var(--accent);color:#fff;border-color:transparent}
+.btn.wa{background:#25d366;color:#05301a;border-color:transparent}.btn.danger{color:var(--red)}
+.btn.sm{padding:5px 10px;font-size:12px}.btn.dis{opacity:.5;pointer-events:none}
+input,textarea,select{font:inherit;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:9px 11px;width:100%}
+input[type=checkbox]{width:auto}
+textarea{resize:vertical;min-height:90px;line-height:1.45}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--accent2);border-color:var(--accent)}
+label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin:12px 0 6px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.chip{all:unset;cursor:pointer;font-size:12px;padding:6px 10px;border-radius:99px;background:var(--panel2);border:1px solid var(--line)}
+.chip:hover{border-color:var(--accent)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.between{justify-content:space-between}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:12px;color:var(--muted);font-weight:600;padding:10px 12px;border-bottom:1px solid var(--line)}
+td{padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr.click{cursor:pointer}tr.click:hover td{background:var(--panel2)}
+.biz{font-weight:600}.small{font-size:12px;color:var(--muted)}
+.pill{display:inline-block;font-size:11px;font-weight:600;padding:3px 8px;border-radius:99px;white-space:nowrap}
+.p-new{background:var(--blue2);color:var(--blue)}.p-contacted{background:var(--violet2);color:var(--violet)}
+.p-talking{background:var(--warn2);color:var(--warn)}.p-won{background:var(--accent2);color:var(--accent)}
+.p-lost,.p-do_not_contact{background:var(--red2);color:var(--red)}.p-later{background:var(--panel2);color:var(--muted)}
+.ch{display:inline-block;font-size:10px;font-weight:700;padding:2px 6px;border-radius:5px;margin-right:4px}
+.ch-wa{background:#d9fdd3;color:#0b5c26}.ch-em{background:var(--blue2);color:var(--blue)}.ch-off{background:var(--panel2);color:var(--muted);text-decoration:line-through}
+.score{display:inline-grid;place-items:center;min-width:30px;height:24px;border-radius:6px;font-weight:700;font-size:12px}
+.s-hi{background:var(--red2);color:var(--red)}.s-md{background:var(--warn2);color:var(--warn)}.s-lo{background:var(--panel2);color:var(--muted)}
+.bar{height:8px;background:var(--panel2);border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;background:var(--accent);transition:width .4s}
+.empty{text-align:center;color:var(--muted);padding:28px}
+.drawer-bg{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;z-index:9}
+.drawer{position:fixed;top:0;right:0;height:100vh;width:min(680px,100vw);background:var(--bg);border-left:1px solid var(--line);z-index:10;overflow:auto;transform:translateX(100%);transition:transform .25s}
+.drawer.open{transform:none}.drawer-bg.open{display:block}
+.dhead{position:sticky;top:0;background:var(--panel);border-bottom:1px solid var(--line);padding:16px 20px;display:flex;gap:12px;align-items:center;z-index:2}
+.dbody{padding:20px;display:grid;gap:14px}
+.sec h3{margin:0 0 10px;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.line{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line)}
+.line:last-child{border:0}
+.ok{color:var(--accent);font-weight:700}.issue{padding:8px 10px;border-radius:8px;background:var(--red2);margin-bottom:6px;font-size:13px}
+.issue b{color:var(--red)}
+.thread{display:flex;flex-direction:column;gap:8px;max-height:380px;overflow:auto;padding:4px}
+.bub{max-width:85%;padding:9px 12px;border-radius:12px;white-space:pre-wrap;line-height:1.4}
+.me{align-self:flex-end;background:#d9fdd3;color:#0b2e13;border-bottom-right-radius:3px}
+.me.em{background:var(--blue2);color:var(--text)}
+.them{align-self:flex-start;background:var(--panel2);border-bottom-left-radius:3px}
+.bub .t{font-size:10px;opacity:.65;margin-top:5px}
+.tabs{display:flex;gap:4px;background:var(--panel2);padding:4px;border-radius:9px;width:max-content;margin-bottom:10px}
+.tabs button{all:unset;cursor:pointer;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;color:var(--muted)}
+.tabs button.on{background:var(--panel);color:var(--text);box-shadow:var(--shadow)}
+.kanban{display:grid;grid-template-columns:repeat(6,minmax(170px,1fr));gap:12px;overflow:auto}
+.col{background:var(--panel2);border-radius:var(--radius);padding:10px;min-height:300px}
+.col h4{margin:4px 4px 10px;font-size:12px;display:flex;justify-content:space-between}
+.kc{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;cursor:pointer}
+.kc:hover{border-color:var(--accent)}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:8px;opacity:0;transition:.25s;z-index:20;max-width:90vw}
+.toast.show{opacity:1}
+.hint{background:var(--blue2);padding:10px 12px;border-radius:8px;font-size:13px;line-height:1.5}
+.warnbox{background:var(--warn2);padding:10px 12px;border-radius:8px;font-size:13px;line-height:1.5}
+.status-bar{display:flex;gap:18px;flex-wrap:wrap;align-items:center}
+.status-bar .s{display:flex;flex-direction:column}.status-bar .s b{font-size:15px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:var(--muted)}
+.dot.on{background:var(--accent)}.dot.err{background:var(--red)}
+.switch{position:relative;display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-weight:600}
+.switch input{display:none}.switch i{width:38px;height:22px;border-radius:99px;background:var(--line);position:relative;transition:.2s}
+.switch i:after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.2s}
+.switch input:checked+i{background:var(--accent)}.switch input:checked+i:after{left:19px}
+.step{border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px;background:var(--panel)}
+.step .row input[type=number]{width:80px}
+code{background:var(--panel2);padding:1px 5px;border-radius:4px;font-size:12px}
+.pulse{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--accent);margin-right:8px;animation:pl 1.2s infinite}
+@keyframes pl{0%{box-shadow:0 0 0 0 rgba(34,197,94,.6)}70%{box-shadow:0 0 0 9px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+.now{background:var(--accent2);padding:10px 12px;border-radius:8px;margin:10px 0;display:flex;align-items:center;flex-wrap:wrap;gap:4px}
+.res{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.feed{font:12px/1.7 ui-monospace,Consolas,monospace;color:var(--muted);max-height:220px;overflow:auto}
+mark{background:#fde68a;color:#111;border-radius:3px;padding:0 2px}
+pre.prev{white-space:pre-wrap;background:var(--panel2);padding:12px;border-radius:8px;font:13px/1.45 Inter,system-ui;margin:6px 0 12px}
+@media (max-width:900px){.app{grid-template-columns:1fr}nav{position:static;height:auto;display:flex;overflow:auto;padding:10px}.logo{padding:0 10px 0 0}nav button{width:auto;white-space:nowrap}.engine-mini{display:none}.g5,.g3{grid-template-columns:repeat(2,1fr)}.g2{grid-template-columns:1fr}main{padding:18px 16px}.hide-m{display:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <nav>
+    <div class="logo"><i>S</i>Scout</div>
+    <button data-v="today" class="on">Today <span class="count" id="c-today">0</span></button>
+    <button data-v="dash">Dashboard</button>
+    <button data-v="discover">Discover</button>
+    <button data-v="leads">Leads <span class="count" id="c-leads">0</span></button>
+    <button data-v="companies">Companies <span class="count" id="c-co">0</span></button>
+    <button data-v="pipeline">Pipeline</button>
+    <button data-v="sequences">Sequences</button>
+    <button data-v="settings">Settings</button>
+    <button id="pausebtn" onclick="stopAll()" style="all:unset;cursor:pointer;box-sizing:border-box;display:block;width:100%;text-align:center;margin-top:16px;padding:12px;border-radius:10px;font-weight:800;letter-spacing:.5px;background:var(--red);color:#fff">■ STOP</button>
+    <div class="engine-mini" id="engmini"></div>
+    <button onclick="location.href='/logout'" style="margin-top:6px;font-size:12px">Log out</button>
+  </nav>
+  <main id="main"></main>
+</div>
+<div class="drawer-bg" id="dbg"></div>
+<div class="drawer" id="drawer"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const S={view:'today',leads:[],jobs:{},settings:{email:{}},presets:[],sequences:{email:[],whatsapp:[]},engine:{},today:{replies:[],wa_due:[],upcoming:[],recent:[],events:[]},
+  filter:{uk:true,status:'',q:'',ch:'',seq:'',score:0,sort:'quality',page:0,unread:false,minq:0},cofilter:{q:'',status:'',ch:'',seq:'',score:0,sort:'quality',page:0,minq:0},open:null,found:[],tab:'whatsapp',bulk:{whatsapp:true,email:true},seqEdit:null,prevKey:''};
+const STATUSES=['new','contacted','talking','won','lost','later','do_not_contact'];
+const LABEL={new:'New',contacted:'Contacted',talking:'Talking',won:'Won',lost:'Lost',later:'Later',do_not_contact:'Do not contact'};
+const ISSUE={broken_whatsapp_button:'Broken WhatsApp button',fake_phone_number:'Fake phone number',broken_call_button:'Empty call button',
+  fake_email:'Email bounces',placeholder_text:'Template text left on site',empty_social_link:'Social icon goes nowhere',
+  whatsapp_button_on_landline:'WhatsApp on a landline',no_whatsapp_button:'No WhatsApp button',dead_button:'Dead button',
+  no_custom_domain:'No custom domain',page_failed_to_load:'Page failed to load',
+  site_down:'Website down',not_mobile_friendly:'Not mobile-friendly',no_https:'Not secure (no HTTPS)',no_quote_option:'No quote button or form',
+  dated_build:'Dated build',site_offline:'Site offline / deleted',old_copyright:'Old copyright year',slow_site:'Slow website',broken_images:'Broken images',
+  no_contact_form:'No enquiry form',weak_google_listing:'Weak Google listing'};
+const PRESETS={gmail:['smtp.gmail.com',465,'imap.gmail.com',993],zoho:['smtp.zoho.eu',465,'imap.zoho.eu',993],
+  outlook:['smtp.office365.com',587,'outlook.office365.com',993]};
+const $=s=>document.querySelector(s);
+const esc=s=>(s??'').toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const api=async(path,opt={})=>{const r=await fetch(path,{headers:{'Content-Type':'application/json'},...opt,body:opt.body?JSON.stringify(opt.body):undefined});
+  if(r.status===401&&path!=='/api/wa/status'){location.href='/login';return {};}
+  const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.detail||r.statusText);return j;};
+const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3200);};
+const wa=(num,text)=>`https://wa.me/${num.replace('+','')}?text=${encodeURIComponent(text)}`;
+const fmtNum=n=>n?'0'+n.slice(3).replace(/^(\d{4})/,'$1 '):'—';
+const sc=n=>`<span class="score ${n>=6?'s-hi':n>=3?'s-md':'s-lo'}">${n}</span>`;
+const pill=s=>`<span class="pill p-${s}">${LABEL[s]||s}</span>`;
+const when=iso=>{if(!iso)return'';const d=new Date(iso),n=new Date(),days=Math.round((d-n)/864e5);
+  const t=d.toLocaleString('en-GB',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});return t;};
+const chBadges=l=>`${l.number?`<span class="ch ${l.can_wa?'ch-wa':'ch-off'}">WA</span>`:''}${l.email?`<span class="ch ${l.can_email?'ch-em':'ch-off'}">EMAIL</span>`:''}`;
+const contactable=l=>l.scan.is_uk&&(l.can_wa||l.can_email);
+function seqLabel(s,ch){ if(!s)return'<span class="small">Not started</span>';
+  const total=S.sequences[ch]?.length||0;
+  if(s.state==='active')return `<span class="ok">● Step ${Math.min(s.step+1,total)}/${total}</span> <span class="small">next ${esc(when(s.next_at))}</span>`;
+  if(s.state==='paused')return `<span class="small">⏸ Paused at step ${s.step+1}/${total}</span>`;
+  if(s.state==='done')return `<span class="small">✓ Sequence finished</span>`;
+  if(s.state==='manual')return `<span class="small">Manual emails only</span>`;
+  return `<span class="small">■ Stopped (${esc(s.stopped_reason||'')})</span>`; }
+
+async function refresh(){
+  Object.assign(S,await api('/api/state')); S.today=await api('/api/today'); S.prog=await api('/api/progress').catch(()=>S.prog);
+  if(!S.seqEdit) S.seqEdit=JSON.parse(JSON.stringify(seqSource()));
+  $('#c-leads').textContent=S.leads.filter(l=>l.source!=='company'&&contactable(l)).length;
+  $('#c-co').textContent=S.leads.filter(l=>l.source==='company').length;
+  const todo=S.today.replies.length+S.today.wa_due.length; const c=$('#c-today'); c.textContent=todo; c.classList.toggle('hot',S.today.replies.length>0);
+  const e=S.engine; $('#engmini').innerHTML=`<div><span class="dot ${e.mode==='live'&&e.ready?'on':''}"></span><b>Email ${e.ready?(e.mode==='live'?'live':'paused'):'not set up'}</b></div>
+    <div>UK ${esc(e.uk_time)} · ${e.in_window?'sending hours':'outside hours'}</div><div>Sent today ${e.sent_today}/${e.cap}</div>
+    <div style="margin-top:6px"><span class="dot ${S.settings.autopilot?.enabled?'on':''}"></span><b>Autopilot ${S.settings.autopilot?.enabled?'on':'off'}</b></div><div>Today ${e.autopilot?.enrolled||0}/${S.settings.autopilot?.daily_target||0} leads</div>
+    <div style="margin-top:6px"><span class="dot ${S.settings.whatsapp?.auto?'on':''}"></span><b>WhatsApp ${S.settings.whatsapp?.auto?'auto':'manual'}</b></div><div>Sent today ${e.wa?.sent_today||0}/${e.wa?.cap||0}</div>`;
+  render(); if(S.open) drawer(S.open,true);
+}
+function go(v){S.view=v;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));render();window.scrollTo(0,0);}
+document.querySelectorAll('nav button[data-v]').forEach(b=>b.onclick=()=>go(b.dataset.v));
+const activeJob=()=>Object.values(S.jobs).find(j=>!j.finished);
+function jobCard(){const j=activeJob();if(!j)return'<div id="job"></div>';
+  return `<div id="job"><div class="card"><div class="row between"><b>${j.cancelled?'Stopping…':`Scanning ${j.done}/${j.total} sites…`}</b><div class="row"><span class="small">${esc(j.current||'')}</span>
+    ${j.cancelled?'':`<button class="btn sm danger" onclick="api('/api/jobs/${j.id}/stop',{method:'POST'}).then(()=>{toast('Stopping after the current site…');refresh()})">■ Stop</button>`}</div></div>
+  <div class="bar" style="margin-top:10px"><i style="width:${j.done/j.total*100}%"></i></div></div></div>`;}
+
+function engineCard(){const e=S.engine;
+  return `<div class="card"><div class="row between"><div class="status-bar">
+    <label class="switch" title="Live = emails send automatically"><input type="checkbox" ${e.mode==='live'?'checked':''} ${e.ready?'':'disabled'} onchange="setMode(this.checked)"><i></i>${e.mode==='live'?'Email sending: LIVE':'Email sending: paused'}</label>
+    <div class="s"><span class="small">UK time</span><b>${esc(e.uk_time)}</b></div>
+    <div class="s"><span class="small">Window</span><b>${e.in_window?'Open':'Closed'}</b></div>
+    <div class="s"><span class="small">Sent today</span><b>${e.sent_today} / ${e.cap}</b></div>
+    <div class="s"><span class="small">Due now</span><b>${e.due_now}</b></div>
+    <div class="s"><span class="small">Inbox checked</span><b>${e.last_inbox?esc(when(e.last_inbox)):'never'}</b></div></div>
+    <div class="row"><button class="btn sm" onclick="checkInbox()">Check inbox now</button><button class="btn sm" onclick="api('/api/engine/run',{method:'POST'}).then(()=>{toast('Engine running…');setTimeout(refresh,4000)})">Run now</button></div></div>
+    <div class="row" style="margin-top:14px;gap:18px"><label class="switch"><input type="checkbox" ${S.settings.whatsapp?.auto?'checked':''} onchange="api('/api/settings',{method:'POST',body:{whatsapp:{auto:this.checked}}}).then(()=>{toast(this.checked?'WhatsApp auto-send ON':'WhatsApp auto-send off');refresh()})"><i></i>WhatsApp auto-send: ${S.settings.whatsapp?.auto?'ON':'off'}</label>
+      <div class="status-bar"><div class="s"><span class="small">Sent today</span><b>${e.wa?.sent_today||0} / ${e.wa?.cap||0}</b></div><div class="s"><span class="small">Window</span><b>${e.wa?.in_window?'Open':'Closed'}</b></div><div class="s"><span class="small">Due now</span><b>${e.wa?.due_now||0}</b></div></div></div>
+    ${e.wa?.error&&S.settings.whatsapp?.auto?`<div class="warnbox" style="margin-top:12px"><b>WhatsApp:</b> ${esc(e.wa.error)}. Check Settings → WhatsApp.</div>`:''}
+    ${!e.ready?`<div class="hint" style="margin-top:12px">Email isn't set up yet. Add your mailbox in <a href="#" onclick="go('settings')">Settings</a> to send cold emails and detect replies automatically.</div>`:''}
+    ${e.inbox_error?`<div class="warnbox" style="margin-top:12px"><b>Inbox check failed:</b> ${esc(e.inbox_error)}</div>`:''}
+    ${e.send_error?`<div class="warnbox" style="margin-top:12px"><b>Last send error:</b> ${esc(e.send_error)}</div>`:''}</div>`;}
+function autopilotCard(){const a=S.settings.autopilot||{},t=S.engine.autopilot||{enrolled:0,searches:0,scans:0,notes:[],pool:0,history:{}};
+  const pct=Math.min(100,(t.enrolled/(a.daily_target||1))*100), hist=Object.entries(t.history||{}), mx=Math.max(a.daily_target||1,...hist.map(h=>h[1]));
+  return `<div class="card"><div class="row between"><div class="row"><label class="switch"><input type="checkbox" ${a.enabled?'checked':''} onchange="apSave({enabled:this.checked})"><i></i>${a.enabled?'Autopilot ON':'Autopilot off'}</label>
+    <span class="small">Daily target</span><input type="number" min="1" value="${a.daily_target}" style="width:80px" onchange="apSave({daily_target:+this.value})">
+    <span class="small">new leads/day via</span>
+    <label class="row" style="margin:0;gap:5px;color:var(--text)"><input type="checkbox" ${a.channels?.includes('whatsapp')?'checked':''} onchange="apChan('whatsapp',this.checked)"> WhatsApp</label>
+    <label class="row" style="margin:0;gap:5px;color:var(--text)"><input type="checkbox" ${a.channels?.includes('email')?'checked':''} onchange="apChan('email',this.checked)"> Email</label></div>
+    <a href="#" class="small" onclick="go('settings')">Autopilot settings →</a></div>
+    <div class="row between" style="margin-top:14px"><b>Today: ${t.enrolled} / ${a.daily_target} new leads started</b><span class="small">${t.pool} ready in the pool · ${t.searches} searches · ${t.scans} sites scanned today</span></div>
+    <div class="bar" style="margin-top:8px;height:10px"><i style="width:${pct}%"></i></div>
+    ${hist.length>1?`<div style="display:flex;gap:4px;align-items:flex-end;height:44px;margin-top:12px" title="Leads started per day, last 14 days">${hist.map(([d,v])=>`<div title="${d}: ${v}" style="flex:1;background:${v>=a.daily_target?'var(--accent)':'var(--blue)'};opacity:.8;border-radius:3px 3px 0 0;height:${Math.max(3,v/mx*44)}px"></div>`).join('')}</div>`:''}
+    ${a.enabled&&a.auto_discover&&!(S.engine.discovery?.providers||[]).length?`<div class="hint" style="margin-top:12px">No search engine connected, so Autopilot is finding new sites from the free archives (Common Crawl, Internet Archive). On the server, the built-in search engine (SearXNG) starts automatically and adds targeted searches.</div>`:''}
+    ${(t.notes||[]).includes('budget used')?`<div class="hint" style="margin-top:12px">Today's search/scan budget is used up. Raise it in Settings if you want more.</div>`:''}
+    ${(()=>{const f=S.engine.funnel||{};if(!f.scanned)return '';const pct=(a,b)=>b?Math.round(a/b*100)+'%':'—';
+      return `<div style="margin-top:14px"><b>Today's funnel</b> <span class="small">(where leads drop off)</span>
+      <div class="row" style="gap:6px;margin-top:8px;align-items:stretch">${[['Sites scanned',f.scanned,''],['UK businesses',f.uk,pct(f.uk,f.scanned)],['With WhatsApp/email',f.contactable,pct(f.contactable,f.uk)],['Started',f.started,'']]
+        .map(([t,n,p],i)=>`${i?'<span style="align-self:center;color:var(--muted)">→</span>':''}<div style="flex:1;min-width:110px;background:var(--panel2);border-radius:8px;padding:8px 10px"><div class="small">${t}</div><b style="font-size:18px">${n}</b> <span class="small">${p}</span></div>`).join('')}</div>
+      <div class="small" style="margin-top:6px">Also skipped today: ${f.skipped_competitor} web designers/agencies · ${f.offline} deleted sites. Scanning ${f.workers} sites at a time, ${f.pages} page${f.pages>1?'s':''} each.
+      ${f.scanned>20&&f.uk/f.scanned<0.2?' <b>Most scanned sites aren\'t UK:</b> UK-targeted searches (Firecrawl/SearXNG) and the Companies tab give far better UK leads than the global archives.':''}</div></div>`})()}
+    <div class="small" style="margin-top:10px">Runs on ${S.settings.email?.weekdays_only?'weekdays':'every day'} from 07:00 to ${S.settings.email?.end_hour}:00 UK time while Scout is open. It picks the most broken sites first, starts the follow-up sequence, and finds and scans new sites when it runs out.</div></div>`;}
+async function apSave(v){await api('/api/settings',{method:'POST',body:{autopilot:v}});toast('Autopilot updated');refresh();}
+async function apChan(c,on){let ch=new Set(S.settings.autopilot.channels||[]);on?ch.add(c):ch.delete(c);if(!ch.size)return toast('Pick at least one channel');apSave({channels:[...ch]});}
+// ---------- drafted replies waiting for approval ----------
+S.dirty=new Set();
+const STAGE_LABEL={deliver_value:'Give value',understand:'Build trust',offer_allowed:'Offer',price_given:'Closing',client:'Client',opener:'Follow-up'};
+const STYLE=[['Softer','Make it softer and less direct. Ease into the point.'],['Shorter','Make it much shorter, 1-2 sentences.'],
+  ['Warmer','Make it warmer and more personal.'],['More casual','More casual, like a friendly text.'],['More professional','A bit more professional and polished.'],
+  ['Less salesy','Remove anything that sounds like selling. Just be helpful.'],['No question','Don\'t end with a question.']];
+const QUICK=[['yes','🎁 Give value'],['diy',"They'll do it themselves"],['no_worries','Thanks / don\'t worry'],['busy','Not now'],['has_someone','Has someone'],
+  ['who','Who are you?'],['more_info','Wants more info'],['interested','Offer free mockup'],['price','They asked price'],['expensive','Too expensive'],['close','Close the deal']];
+function draftCard(dr){const k=dr.key,em=dr.channel==='email';
+  return `<div class="draft" style="border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px">
+    <div class="row between"><div><span class="biz" style="cursor:pointer" onclick="drawer('${k}')">${esc(dr.business)}</span> <span class="ch ${em?'ch-em':'ch-wa'}">${em?'EMAIL':'WA'}</span>
+      <span class="pill p-talking">${esc(STAGE_LABEL[dr.stage]||dr.stage||'')}</span> <span class="small">${dr.source==='ai'?'AI draft':'template'}</span></div>
+      <button class="btn sm" onclick="drawer('${k}')">Open lead</button></div>
+    ${dr.for?`<div class="them bub" style="margin:10px 0;max-width:100%">${esc(dr.for)}<div class="t">They said</div></div>`:''}
+    ${dr.error?`<div class="warnbox">${esc(dr.error)}</div>`:''}
+    ${dr.dnc?'<div class="warnbox">They opted out. Approving sends this goodbye and marks them Do not contact.</div>':''}
+    ${em?`<label>Subject</label><input id="ds-${k}" value="${esc(dr.subject||'')}" placeholder="blank = reply in the same thread" oninput="S.dirty.add('${k}')">`:''}
+    <label>Your reply (edit freely)</label><textarea id="dt-${k}" style="min-height:110px" oninput="S.dirty.add('${k}')">${esc(dr.text)}</textarea>
+    ${(dr.shots||[]).length?`<div class="row" style="margin-top:8px;align-items:flex-start">${dr.shots.map(u=>`<div style="text-align:center"><img src="${u}" style="height:110px;border:1px solid var(--line);border-radius:6px;cursor:zoom-in" onclick="window.open('${u}')"><br><button class="btn sm" onclick="copyImg('${u}')">Copy image</button></div>`).join('')}
+      <div class="small" style="max-width:260px">${em?`<label class="row" style="gap:6px;margin:0;color:var(--text)"><input type="checkbox" id="da-${k}" ${dr.stage==='deliver_value'?'checked':''}> Attach these screenshots</label>`:'Click "Copy image", then paste it into the WhatsApp chat (Ctrl+V) right after the message sends.'}</div></div>`
+      :`<div class="small" style="margin-top:6px"><a href="#" onclick="api('/api/leads/${k}/shots',{method:'POST'}).then(()=>{toast('Taking screenshots…');setTimeout(refresh,15000)});return false">📸 Take screenshots of their site</a> (phone + desktop) to send as the "value"</div>`}
+    <div class="chips" style="margin-top:10px"><span class="small" style="align-self:center">Rewrite as:</span>${QUICK.map(([i,t])=>`<button class="chip" onclick="regen('${k}','${i}')">${t}</button>`).join('')}</div>
+    <div style="background:var(--panel2);border-radius:8px;padding:10px;margin-top:6px">
+      <div class="row" style="gap:6px"><span class="small" style="font-weight:600">🔒 Note to the AI (never sent):</span>
+        ${STYLE.map(t=>`<button class="chip" style="padding:4px 9px" onclick="regen('${k}','',${JSON.stringify(t[1]).replace(/"/g,'&quot;')})">${t[0]}</button>`).join('')}</div>
+      <div class="row" style="margin-top:8px"><input id="dn-${k}" placeholder="e.g. shorter, mention I'm local to Manchester, ask about their busy season" value="${esc(dr.note||'')}" style="flex:1;min-width:220px"
+          onkeydown="if(event.key==='Enter')regen('${k}','',this.value,$('#dr-${k}')?.checked)">
+        <button class="btn sm" onclick="regen('${k}','',$('#dn-${k}').value,$('#dr-${k}')?.checked)">Rewrite</button></div>
+      <label class="row" style="gap:6px;margin:6px 0 0;font-weight:500"><input type="checkbox" id="dr-${k}"> Use this note for all future replies too</label></div>
+    <div class="row" style="margin-top:8px"><button class="btn primary" id="ab-${k}" onclick="approveDraft('${k}','${dr.channel}')">✓ Approve & send ${em?'email':'on WhatsApp'}</button>
+      <button class="btn" onclick="regen('${k}','')">↻ New draft</button><button class="btn danger" onclick="discardDraft('${k}')">Discard</button></div></div>`;}
+async function regen(k,intent,note,remember){toast(note?'Rewriting with your note…':'Writing a new draft…');
+  try{await api(`/api/leads/${k}/draft${intent?'?intent='+intent:''}`,{method:'POST',body:note?{note,remember:!!remember}:undefined});S.dirty.delete(k);await refresh();
+    toast(remember&&note?'New draft ready, and your note is saved for future replies':'New draft ready');}catch(e){toast(e.message)}}
+async function discardDraft(k){await api(`/api/leads/${k}/draft/discard`,{method:'POST'});S.dirty.delete(k);refresh();}
+async function approveDraft(k,ch){const t=$('#dt-'+k)?.value||'';if(!t.trim())return toast('The reply is empty');
+  const b=$('#ab-'+k);if(b)b.classList.add('dis');
+  try{const r=await api(`/api/leads/${k}/approve`,{method:'POST',body:{text:t,channel:ch,subject:$('#ds-'+k)?.value||null,attach:!!$('#da-'+k)?.checked}});
+    S.dirty.delete(k);
+    if(r.sent==='queued')toast('Approved ✓ Sending through your WhatsApp Web in a few seconds');
+    else if(r.sent==='email')toast('Email sent ✓');
+    else if(r.sent==='manual'){window.open(r.link,'_blank');await api(`/api/leads/${k}/sent`,{method:'POST',body:{text:t}});toast('WhatsApp opened: press send there (extension not connected)');}
+    refresh();}catch(e){toast(e.message);if(b)b.classList.remove('dis');}}
+async function copyImg(u){try{const blob=await fetch(u).then(r=>r.blob());await navigator.clipboard.write([new ClipboardItem({[blob.type]:blob})]);toast('Image copied: paste it into WhatsApp with Ctrl+V');}
+  catch(e){window.open(u);toast('Couldn\'t copy automatically: right-click the image → Copy image');}}
+
+// ---------- live "Sending now" panel ----------
+const left=iso=>{const t=Math.max(0,Math.round((new Date(iso)-Date.now())/1000));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')};
+const hhmm=iso=>iso?new Date(iso).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/London'}):'';
+function liveBlock(P,kind){
+  const icon=kind==='email'?'📤':'📱', noun=kind==='email'?'email':'WhatsApp message', nouns=kind==='email'?'emails':'WhatsApp messages';
+  const res=(P.results||[]).slice(0,8).map(x=>`<div class="res"><span>${x.ok?'<span class="ok">✓</span>':'<span style="color:var(--red)">✗</span>'} <b>${esc(x.business)}</b> <span class="small">${esc(x.to||'')} · message ${x.step}${x.note?' · '+esc(x.note):''}</span></span><span class="small">${hhmm(x.at)}</span></div>`).join('');
+  if(P.active){
+    const n=P.done+P.failed, pct=P.total?Math.round(n/P.total*100):0;
+    return `<div class="row between"><h2 style="margin:0">${icon} Sending ${nouns}: ${n} of ${P.total}</h2><span class="small">${P.done} sent${P.failed?` · ${P.failed} failed`:''}</span></div>
+      <div class="bar" style="margin-top:10px;height:12px"><i style="width:${pct}%"></i></div>
+      ${P.current?`<div class="now"><span class="pulse"></span>Sending to <b>&nbsp;${esc(P.current.business)}&nbsp;</b><span class="small">${esc(P.current.to||'')} · message ${P.current.step}${P.current.of?' of '+P.current.of:''}</span></div>`
+        :P.next_at?`<div class="now">⏳ Next ${noun} in&nbsp;<b data-next="${P.next_at}">${left(P.next_at)}</b>&nbsp;<span class="small">(spaced out on purpose so you don't get flagged as spam)</span></div>`:''}
+      ${(P.queue||[]).length?`<div class="small" style="margin:6px 0">Up next: ${P.queue.slice(0,6).map(esc).join(' · ')}${P.queue.length>6?` · +${P.queue.length-6} more`:''}</div>`:''}
+      ${res?`<div style="margin-top:8px">${res}</div>`:''}`;
+  }
+  if(kind==='email'&&P.due>0) return `<h2 style="margin:0 0 8px">${icon} ${P.due} ${P.due===1?'email':'emails'} waiting to send</h2>
+      <div class="hint">${esc(P.waiting_reason)}</div>
+      <div class="small" style="margin-top:8px">Waiting: ${(P.due_list||[]).slice(0,8).map(x=>esc(x.business)).join(' · ')}${P.due>8?` · +${P.due-8} more`:''}</div>`;
+  if(kind==='wa'&&!P.auto) return P.due?`<h2 style="margin:0 0 6px">${icon} ${P.due} WhatsApp messages ready</h2><div class="small">Auto-send is off, so send them by hand with the buttons further down, or turn on auto-send in Settings → WhatsApp.</div>`:'';
+  if(kind==='wa'&&P.due) return `<h2 style="margin:0 0 6px">${icon} ${P.due} WhatsApp messages waiting</h2><div class="small">Auto-send is on. They go out during sending hours (${P.sent_today}/${P.cap} sent today).</div>`;
+  return `<div class="row between"><h2 style="margin:0">${icon} ${kind==='email'?'Emails':'WhatsApp'}: all caught up</h2><span class="small">${P.sent_today} sent today · limit ${P.cap}</span></div>
+    ${res?`<div class="small" style="margin-top:8px">Last batch${P.finished?' finished '+hhmm(P.finished):''}:</div>${res}`:''}`;
+}
+function todayBar(P){const E=P.email, list=P.today_emails||[], pct=Math.min(100,Math.round(E.sent_today/Math.max(E.cap,1)*100));
+  return `<div class="row between"><b>Today: ${E.sent_today} of ${E.cap} emails sent</b><span class="small">${E.due?E.due+' waiting · ':''}daily limit ${E.cap}</span></div>
+  <div class="bar" style="margin:8px 0 4px;height:10px"><i style="width:${pct}%"></i></div>
+  ${list.length?`<details ${S.openSent?'open':''} ontoggle="S.openSent=this.open" style="margin-top:8px"><summary class="small" style="cursor:pointer">Show who was emailed today (${list.length})</summary>
+    <div style="margin-top:6px;max-height:260px;overflow:auto">${list.map(x=>`<div class="res"><span><span class="ok">✓</span> <b>${esc(x.business)}</b> <span class="small">${esc(x.to||'')}${x.manual?' · your reply':x.step?' · message '+x.step:''}</span></span><span class="small">${hhmm(x.at)}</span></div>`).join('')}</div></details>`:''}
+  ${(P.today_wa||[]).length?`<div class="small" style="margin-top:8px">📱 WhatsApp sent today: ${P.today_wa.length} (${P.today_wa.slice(0,5).map(x=>esc(x.business)).join(', ')}${P.today_wa.length>5?'…':''})</div>`:''}`;}
+function sendCard(){const P=S.prog;if(!P)return '<div class="card small">Loading live status…</div>';
+  const wa=liveBlock(P.wa,'wa');
+  return `<div class="card">${todayBar(P)}</div><div class="card" style="margin-top:14px">${liveBlock(P.email,'email')}${P.email.stopped&&!P.email.active?`<div class="warnbox" style="margin-top:8px">Stopped: ${esc(P.email.stopped)}</div>`:''}</div>
+  ${wa?`<div class="card" style="margin-top:14px">${wa}</div>`:''}
+  <div class="card" style="margin-top:14px"><div class="row between"><h2 style="margin:0">⚡ Live activity</h2><span class="small">UK ${esc(P.uk_time)} · updates every 3 seconds</span></div>
+    <div class="feed" style="margin-top:8px">${(P.log||[]).map(l=>`<div>${esc(l)}</div>`).join('')||'Nothing yet today.'}</div></div>`;}
+let _wasActive=false;
+async function pollProg(){ if(document.hidden||S.view!=='today')return;
+  try{S.prog=await api('/api/progress');}catch(e){return}
+  const box=$('#sendbox'); if(box) box.innerHTML=sendCard();
+  Object.assign(S.engine,{sent_today:S.prog.email.sent_today,due_now:S.prog.email.due});
+  if(S.engine.wa) Object.assign(S.engine.wa,{sent_today:S.prog.wa.sent_today,due_now:S.prog.wa.due});
+  const eb=$('#engbox'); if(eb && !eb.contains(document.activeElement)) eb.innerHTML=engineCard();
+  const active=S.prog.email.active||S.prog.wa.active; if(_wasActive&&!active) refresh(); _wasActive=active;}
+setInterval(pollProg,3000);
+setInterval(()=>document.querySelectorAll('[data-next]').forEach(el=>el.textContent=left(el.dataset.next)),1000);
+
+async function setMode(live){await api('/api/settings',{method:'POST',body:{email:{mode:live?'live':'paused'}}});toast(live?'Email sending is LIVE':'Email sending paused');refresh();}
+async function checkInbox(){try{const r=await api('/api/email/check',{method:'POST'});toast(`Checked ${r.checked} emails · ${r.events.length} new replies/bounces`);refresh();}catch(e){toast(e.message)}}
+
+// ---------- lead quality ----------
+const qOf=l=>l.quality||{score:0,grade:'D',reasons:[]};
+const QCOL={A:'p-won',B:'p-new',C:'p-talking',D:'p-lost'};
+const qBadge=l=>{const q=qOf(l);return `<span class="pill ${QCOL[q.grade]}" title="${esc(q.reasons.slice(0,4).map(r=>(r[0]>0?'+':'')+r[0]+' '+r[1]).join('\n'))}">${q.grade} · ${q.score}</span>`};
+function qualityCard(l){const q=qOf(l);
+  return `<div class="card sec"><h3>🎯 Lead quality: ${qBadge(l)}</h3><div class="small" style="margin-bottom:6px">How likely this lead is to become a paying client, based on what's on their site and on your own reply rates so far.</div>
+  ${q.reasons.map(([p,t])=>`<div class="res"><span>${p>0?'<span class="ok">▲</span>':p<0?'<span style="color:var(--red)">▼</span>':'<span style="color:var(--blue)">◆</span>'} ${esc(t)}</span><span class="small">${p?((p>0?'+':'')+p):''}</span></div>`).join('')}</div>`;}
+
+// ---------- selecting & deleting leads ----------
+S.sel=new Set();
+function selOne(k,on){on?S.sel.add(k):S.sel.delete(k);render();}
+function selPage(keys,on){keys.forEach(k=>on?S.sel.add(k):S.sel.delete(k));render();}
+function selBar(rows){const n=S.sel.size;if(!n)return '';
+  return `<div class="row" style="background:var(--red2);border-radius:8px;padding:8px 12px;margin-bottom:10px;justify-content:space-between">
+    <b>${n} selected</b><div class="row"><button class="btn sm" onclick="rescanSel()">↻ Re-scan selected</button><button class="btn sm" onclick="S.sel.clear();render()">Clear selection</button>
+    <button class="btn sm danger" style="background:var(--red);color:#fff;border-color:transparent" onclick="deleteLeads([...S.sel])">🗑 Delete ${n} lead${n>1?'s':''}</button></div></div>`;}
+async function rescanSel(){const urls=[...S.sel].map(k=>{const l=S.leads.find(x=>x.key===k);return l&&(l.website||l.scan.site)}).filter(Boolean);
+  if(!urls.length)return;await doScan(urls);S.sel.clear();toast(`Re-scanning ${urls.length} sites to update their quality score…`);}
+async function deleteLeads(keys,name){
+  const msg=keys.length===1?`Delete ${name||'this lead'}? Its messages and history are removed, and Scout won't add it again.`:`Delete ${keys.length} leads? Their history is removed, and Scout won't add them again.`;
+  if(!confirm(msg))return;
+  try{const r=await api('/api/leads/delete',{method:'POST',body:{keys}});keys.forEach(k=>S.sel.delete(k));
+    if(S.open&&keys.includes(S.open))closeDrawer();toast(`Deleted ${r.deleted} lead${r.deleted===1?'':'s'}`);refresh();}catch(e){toast(e.message)}}
+
+// ---------- search & filters (Leads and Companies) ----------
+const hostOf=u=>(u||'').replace(/^https?:\/\//,'').replace(/\/.*$/,'').replace(/^www\./,'');
+const platOf=l=>{const h=hostOf(l.scan.site);const p=(S.platforms||[]).map(x=>x.domain).sort((a,b)=>b.length-a.length).find(d=>h.endsWith('.'+d));return p||null};
+const platLabel=l=>{const p=platOf(l);return p?((S.platforms||[]).find(x=>x.domain===p)||{}).label||p:'Website'};
+const lastContact=l=>{const h=[...l.history].reverse().find(x=>x.at);return h?h.at:null};
+const hhmmDate=iso=>new Date(iso).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+const hl=(t,q)=>{t=esc(t);if(!q)return t;const i=t.toLowerCase().indexOf(q.toLowerCase());return i<0?t:t.slice(0,i)+'<mark>'+t.slice(i,i+q.length)+'</mark>'+t.slice(i+q.length)};
+function seqState(l){const st=['whatsapp','email'].map(c=>l.seq[c]?.state).filter(Boolean);
+  if(l.history.some(h=>h.from==='them'))return 'replied'; if(!st.length)return 'not'; if(st.includes('active'))return 'running';
+  if(st.includes('paused'))return 'paused'; if(st.every(x=>x==='done'))return 'done'; return 'stopped';}
+function filterLeads(list,f){
+  const q=(f.q||'').toLowerCase().trim();
+  let r=list.filter(l=>{
+    if(f.uk&&!contactable(l))return false;
+    if(f.status&&l.status!==f.status)return false;
+    if(f.ch==='wa'&&!l.can_wa)return false; if(f.ch==='email'&&!l.can_email)return false;
+    if(f.ch==='both'&&!(l.can_wa&&l.can_email))return false; if(f.ch==='none'&&(l.can_wa||l.can_email))return false;
+    if(f.seq&&seqState(l)!==f.seq)return false;
+    if(f.score&&l.scan.unfinished_score<f.score)return false;
+    if(f.unread&&!l.unread)return false;
+    if(f.minq&&qOf(l).score<f.minq)return false;
+    if(f.plat&&(f.plat==='other'?!!platOf(l):platOf(l)!==f.plat))return false;
+    if(q){const hay=[l.business,l.key,l.email,l.number,l.website,l.company?.city,l.company?.name,l.notes,(l.scan.uk_signals||[]).join(' '),
+        (l.scan.issues||[]).map(i=>ISSUE[i.issue]||i.issue).join(' ')].join(' ').toLowerCase(); if(!hay.includes(q))return false;}
+    return true;});
+  const by={quality:(a,b)=>qOf(b).score-qOf(a).score, score:(a,b)=>b.scan.unfinished_score-a.scan.unfinished_score, name:(a,b)=>a.business.localeCompare(b.business),
+    recent:(a,b)=>(b.scanned_at||'').localeCompare(a.scanned_at||''), contact:(a,b)=>(lastContact(b)||'').localeCompare(lastContact(a)||'')};
+  return r.sort(by[f.sort||'quality']);}
+function resetFilter(which){const keep={uk:which==='leads'};if(which==='leads')S.filter={...keep,status:'',q:'',ch:'',seq:'',score:0,sort:'quality',page:0,unread:false,minq:0};else S.cofilter={q:'',status:'',ch:'',seq:'',score:0,sort:'quality',page:0,minq:0};render();}
+function filterBar(f,count,which){const set=(k,v)=>`S.${which==='leads'?'filter':'cofilter'}.${k}=${v};S.${which==='leads'?'filter':'cofilter'}.page=0;render()`;
+  const sel=(k,opts)=>`<select style="width:auto" onchange="${set(k,"this.value")}">${opts.map(([v,t])=>`<option value="${v}" ${String(f[k]??'')===String(v)?'selected':''}>${t}</option>`).join('')}</select>`;
+  return `<div class="row" style="margin-bottom:12px;gap:8px">
+    <input id="q-${which}" placeholder="Search name, email, phone, town, problem…" value="${esc(f.q||'')}" oninput="${set('q','this.value')};const e=document.getElementById('q-${which}');e.focus();e.setSelectionRange(99,99)" style="max-width:280px">
+    ${sel('status',[['','Any status'],...STATUSES.map(s=>[s,LABEL[s]])])}
+    ${sel('ch',[['','Any contact'],['wa','Has WhatsApp'],['email','Has email'],['both','WhatsApp + email'],['none','No contact']])}
+    ${sel('seq',[['','Any follow-up'],['not','Not started'],['running','Running'],['paused','Paused'],['replied','Replied'],['done','Finished'],['stopped','Stopped']])}
+    <select style="width:auto" onchange="${set('score','+this.value')}">${[[0,'Any score'],[3,'Score 3+'],[6,'Score 6+'],[10,'Score 10+']].map(([v,t])=>`<option value="${v}" ${+f.score===v?'selected':''}>${t}</option>`).join('')}</select>
+    <select style="width:auto" onchange="${set('minq','+this.value')}">${[[0,'Any quality'],[50,'Quality C+ (50+)'],[65,'Quality B+ (65+)'],[80,'Quality A (80+)']].map(([v,t])=>`<option value="${v}" ${+(f.minq||0)===v?'selected':''}>${t}</option>`).join('')}</select>
+    ${sel('sort',[['quality','Sort: best leads first'],['score','Sort: most broken'],['recent','Sort: newest'],['contact','Sort: last contacted'],['name','Sort: A–Z']])}
+    ${which==='leads'?sel('plat',[['','All platforms'],...(S.platforms||[]).map(p=>[p.domain,p.label]),['other','Other websites']]):''}
+    ${which==='leads'?`<label class="row" style="margin:0;gap:6px;cursor:pointer;color:var(--text)"><input type="checkbox" ${f.uk?'checked':''} onchange="${set('uk','this.checked')}"> UK & contactable</label>`:''}
+    <label class="row" style="margin:0;gap:6px;cursor:pointer;color:var(--text)"><input type="checkbox" ${f.unread?'checked':''} onchange="${set('unread','this.checked')}"> New replies</label>
+    <span class="small" style="margin-left:auto">${count} match · <a href="#" onclick="resetFilter('${which}');return false">clear</a></span></div>`;}
+
+async function stopAll(){
+  if(S.engine.stopping)return toast('Already stopping…');
+  if(!confirm('STOP everything?\n\n• Email and WhatsApp sending stop and are switched OFF\n• Autopilot and Company Autopilot are switched OFF\n• Searches and scans are cancelled, and the search history is reset\n• Approved WhatsApp replies not yet sent go back to "Waiting for your OK"\n\nYour leads and settings are kept. Nothing starts again until you switch it on.'))return;
+  S.searchGen=(S.searchGen||0)+1; S.found=[]; const q=$('#q'); if(q)q.value=''; const sb=$('#sbtn'); if(sb){sb.classList.remove('dis');sb.textContent='Search';}
+  await api('/api/engine/stop',{method:'POST'});toast('■ Stopped. Everything is switched off');await refresh();
+  for(let i=0;i<40&&S.engine.stopping;i++){await new Promise(r=>setTimeout(r,1000));await refresh();}}
+function pausedBanner(){return S.engine.stopping?`<div style="background:var(--red);color:#fff;border-radius:10px;padding:12px 16px;margin-bottom:16px"><b>■ Stopped.</b> <span style="opacity:.9">Everything is switched off. Closing the last open website check (a few seconds)…</span></div>`:'';}
+function render(){
+  const m=$('#main'),L=S.leads,T=S.today;
+  if(S.view==='today'){
+    m.innerHTML=`<h1>Today</h1><p class="sub">Everything that needs you, in order: replies first, then WhatsApp messages to send. Emails send by themselves.</p>
+    <div class="grid">${autopilotCard()}<div id="engbox">${engineCard()}</div><div id="sendbox">${sendCard()}</div>${jobCard()}
+    <div class="card"><div class="row between"><h2 style="margin:0">✍️ Replies waiting for your OK (${(T.drafts||[]).length})</h2>${T.outbox?`<span class="small">📤 ${T.outbox} approved, sending through WhatsApp Web…</span>`:''}</div>
+      <div class="small" style="margin:4px 0 10px">When a lead replies, Scout drafts your answer (value first, never price too early). Check it, edit if you like, then approve.</div>
+      ${(T.drafts||[]).map(dr=>draftCard(dr)).join('')}
+      ${T.replies.map(r=>`<div class="line" style="cursor:pointer" onclick="drawer('${r.key}')"><div><div class="biz">${esc(r.business)} <span class="ch ${r.channel==='email'?'ch-em':'ch-wa'}">${r.channel==='email'?'EMAIL':'WA'}</span></div><div class="small">${esc(r.text)}</div></div><button class="btn sm" onclick="event.stopPropagation();regen('${r.key}','')">✍️ Draft reply</button></div>`).join('')}
+      ${!(T.drafts||[]).length&&!T.replies.length?'<div class="empty">No new replies. Replies on WhatsApp (through the extension) and email appear here automatically with a drafted answer.</div>':''}</div>
+    <div class="card"><h2>📱 WhatsApp due now (${T.wa_due.length}) ${S.settings.whatsapp?.auto?'<span class="small">· sending automatically, or send any of them yourself</span>':''}</h2>
+      ${T.wa_due.length?T.wa_due.map(f=>`<div class="line"><div style="flex:1"><div class="biz">${esc(f.business)} <span class="small">· step ${f.step+1}/${f.total} · ${fmtNum(f.number)}</span></div>
+        <div style="margin-top:6px;white-space:pre-wrap">${esc(f.text)}</div></div>
+        <div class="row" style="flex-direction:column;align-items:stretch"><a class="btn wa sm" target="_blank" href="${wa(f.number,f.text)}">Open WhatsApp</a>
+        <button class="btn sm" data-k="${f.key}" data-t="${esc(f.text)}" onclick="markSent(this.dataset.k,this.dataset.t)">Mark sent</button>
+        <button class="btn sm" onclick="drawer('${f.key}')">Open lead</button></div></div>`).join('')
+      :'<div class="empty">Nothing to send right now.</div>'}</div>
+    <div class="grid g2">
+      <div class="card"><h2>⏭ Coming up</h2>${T.upcoming.length?T.upcoming.map(u=>`<div class="line"><span><span class="ch ${u.channel==='email'?'ch-em':'ch-wa'}">${u.channel==='email'?'EMAIL':'WA'}</span>${esc(u.business)} <span class="small">step ${u.step}</span></span><span class="small">${esc(when(u.at))}</span></div>`).join(''):'<div class="empty">No follow-ups scheduled. Start sequences from Leads.</div>'}</div>
+      <div class="card"><h2>📤 Recently sent emails</h2>${T.recent.length?T.recent.map(r=>`<div class="line"><span>${esc(r.business)} <span class="small">${r.manual?'manual':'step '+(r.step+1)}</span></span><span class="small">${esc(when(r.at))}</span></div>`).join(''):'<div class="empty">None yet.</div>'}
+      ${T.events.length?`<h2 style="margin-top:16px">Inbox events</h2>${T.events.map(e=>`<div class="line"><span>${e.type==='bounce'?'⚠️ Bounced':'↩︎ Reply'} · ${esc(e.key)}</span><span class="small">${esc(when(e.at))}</span></div>`).join('')}`:''}</div>
+    </div></div>`;
+  }
+  if(S.view==='dash'){
+    const uk=L.filter(l=>l.scan.is_uk),cnt=s=>L.filter(l=>l.status===s).length;
+    const top=L.filter(l=>contactable(l)&&l.status==='new').sort((a,b)=>qOf(b).score-qOf(a).score).slice(0,8);
+    const replied=L.filter(l=>l.history.some(h=>h.from==='them')).length, contacted=L.filter(l=>l.history.some(h=>h.from==='me')).length;
+    m.innerHTML=`<h1>Dashboard</h1><p class="sub">Unfinished UK sites (Base44, Lovable, Replit, Bolt, Netlify, Vercel…) → verified contacts → conversations → clients.</p>
+    <div class="grid">${jobCard()}<div class="grid g5">
+      <div class="card kpi"><div class="l">Sites scanned</div><div class="n">${L.length}</div></div>
+      <div class="card kpi"><div class="l">UK & contactable</div><div class="n">${L.filter(contactable).length}</div><div class="small">${L.filter(l=>l.can_wa).length} WhatsApp · ${L.filter(l=>l.can_email).length} email</div></div>
+      <div class="card kpi"><div class="l">Contacted</div><div class="n">${contacted}</div></div>
+      <div class="card kpi"><div class="l">Reply rate</div><div class="n">${contacted?Math.round(replied/contacted*100):0}%</div><div class="small">${replied} replied</div></div>
+      <div class="card kpi"><div class="l">Won</div><div class="n" style="color:var(--accent)">${cnt('won')}</div></div></div>
+    ${(()=>{const q=S.engine.quality_report||{rows:[]};if(!q.total)return '';
+      const kinds={niche:'Niche',platform:'Platform',problem:'Main problem'};
+      return `<div class="card"><div class="row between"><h2 style="margin:0">📈 What's working for you</h2><span class="small">${q.total} contacted · ${q.base}% average reply rate</span></div>
+      <div class="small" style="margin:4px 0 10px">The quality score learns from these. Groups that reply more get pushed up, ones that don't get pushed down.</div>
+      <table><tr><th>Group</th><th></th><th>Contacted</th><th>Replied</th><th>Reply rate</th></tr>${q.rows.slice(0,14).map(r=>`<tr><td><b>${esc(r.key)}</b></td><td class="small">${kinds[r.kind]||r.kind}</td><td>${r.contacted}</td><td>${r.replied}</td>
+        <td><div class="row" style="gap:8px"><div class="bar" style="width:90px"><i style="width:${r.rate}%;background:${r.rate>=q.base?'var(--accent)':'var(--warn)'}"></i></div>${r.rate}%</div></td></tr>`).join('')}</table></div>`})()}
+    <div class="card"><div class="row between" style="margin-bottom:8px"><h2 style="margin:0">Hottest new leads</h2><button class="btn sm" onclick="go('leads')">All leads</button></div>
+      ${top.length?`<table>${top.map(l=>`<tr class="click" onclick="drawer('${l.key}')"><td><div class="biz">${esc(l.business)}</div><div class="small">${esc(ISSUE[l.hook]||'')}</div></td><td>${chBadges(l)}</td><td>${qBadge(l)}</td></tr>`).join('')}</table>`
+      :`<div class="empty">No new leads. <a href="#" onclick="go('discover')">Discover some →</a></div>`}</div></div>`;
+  }
+  if(S.view==='discover'){
+    m.innerHTML=`<h1>Discover</h1><p class="sub">Find sites built on Base44, Lovable, Replit, Emergent, Bolt, Netlify, Vercel and more, then scan them for verified contacts and broken bits.</p>
+    <div class="grid">${jobCard()}
+    <div class="card"><h2>Search</h2>
+      <div class="row" style="margin-bottom:6px"><select id="qb-p" style="width:auto">${(S.platforms||[]).map(p=>`<option value="${p.domain}">${esc(p.label)} (${p.domain})</option>`).join('')}</select>
+        <input id="qb-n" placeholder="niche, e.g. cleaning" style="max-width:180px"><input id="qb-c" placeholder="town, e.g. Leeds" style="max-width:160px">
+        <button class="btn sm" onclick="$('#q').value=['site:'+$('#qb-p').value,$('#qb-n').value.trim(),$('#qb-c').value.trim()||'UK'].filter(Boolean).join(' ')">Build search</button></div>
+      ${(S.engine.discovery?.providers||[]).length?`<div class="small">Searching with: <b>${S.engine.discovery.providers.join(' → ')}</b> (falls back to the next one if a search fails)</div>`:`<div class="hint">No search engine connected yet. On the server, SearXNG is built in. Or add a Firecrawl/Serper key in <a href="#" onclick="go('settings')">Settings</a>. Meanwhile, use the free archives below.</div>`}
+      <div class="chips">${S.presets.map(p=>`<button class="chip" onclick="$('#q').value=this.textContent">${esc(p)}</button>`).join('')}</div>
+      <div class="row"><input id="q" placeholder='site:base44.app "coming soon" "07" UK' style="flex:1;min-width:240px">
+        <select id="qp" style="width:auto"><option value="1">1 page</option><option value="2">2 pages</option><option value="3">3 pages</option></select>
+        <button class="btn primary" id="sbtn" onclick="doSearch()">Search</button></div><div id="found"></div></div>
+    <div class="card"><div class="row between"><div><h2 style="margin:0 0 4px">Find sites from free archives</h2>
+      <div class="small">Pulls thousands of sites on your switched-on platforms from Common Crawl, the Internet Archive and certificate logs (free, no key), drops apps and tools by name, then scans the best ones.</div></div>
+      <div class="row"><select id="pooln" style="width:auto"><option>10</option><option selected>25</option><option>50</option><option>100</option></select>
+      <button class="btn primary ${S.engine.discovery?.refreshing?'dis':''}" onclick="api('/api/pool/run?n='+$('#pooln').value,{method:'POST'}).then(()=>{toast('Finding sites… this runs in the background');setTimeout(refresh,3000)}).catch(e=>toast(e.message))">${S.engine.discovery?.refreshing?'Working…':'Find & scan'}</button></div></div>
+      ${(()=>{const p=S.engine.discovery?.pool||{},src=S.engine.discovery?.sources||{};return `<div class="row" style="margin-top:12px;gap:18px" >
+        <span class="small">Pool: <b>${p.total||0}</b> sites · ${p.new||0} not checked · ${(p.keep||0)+(p.maybe||0)} waiting · ${p.scanned||0} scanned · ${p.skip||0} skipped (apps/tools)</span></div>
+        <div class="small" style="margin-top:6px">${['commoncrawl','wayback','crtsh'].map(n=>`${({commoncrawl:'Common Crawl',wayback:'Internet Archive',crtsh:'Certificate logs'})[n]}: ${src[n+'_error']&&src[n+'_last']!==new Date().toISOString().slice(0,10)?'<span style="color:var(--warn)">busy, retrying later</span>':src[n+'_last']?('✓ '+(src[n+'_count']??'')+' sites, '+src[n+'_last']):'not fetched yet'}`).join(' · ')}</div>`})()}
+    </div>
+    <div class="card"><h2>Or paste site URLs</h2><textarea id="urls" placeholder="https://example.lovable.app  ·  https://example.base44.app  ·  any website (one per line)"></textarea>
+      <div class="row" style="margin-top:10px"><span class="small">Pages per site</span><select id="pp" style="width:auto"><option>2</option><option selected>3</option><option>5</option></select>
+      <button class="btn primary" onclick="doScan($('#urls').value.split('\\n'))">Scan sites</button></div></div></div>`;
+    renderFound();
+  }
+  if(S.view==='leads'){
+    const f=S.filter; const rows=filterLeads(L.filter(l=>l.source!=='company'),f);
+    const per=50, pages=Math.max(1,Math.ceil(rows.length/per)); f.page=Math.min(f.page||0,pages-1); const pageRows=rows.slice(f.page*per,(f.page+1)*per);
+    const eligible=L.filter(l=>l.source!=='company'&&l.status==='new'&&qOf(l).score>=(S.settings.autopilot?.min_quality??60)&&((S.bulk.whatsapp&&l.can_wa&&l.opener&&!l.seq.whatsapp)||(S.bulk.email&&l.can_email&&!l.seq.email))).length;
+    m.innerHTML=`<h1>Leads</h1><p class="sub">Every contact shown passed verification. Fake ones are listed as problems, which you can use in the pitch.</p>
+    <div class="card" style="margin-bottom:14px"><div class="row between"><div><b>Start outreach in bulk</b><div class="small">Starts the follow-up sequence for every new lead with a verified contact and quality ≥ ${S.settings.autopilot?.min_quality??60} (change it in Settings → Autopilot), best leads first. Emails send automatically when sending is live; WhatsApp messages appear in Today.</div></div>
+      <div class="row"><label class="row" style="margin:0;gap:6px;color:var(--text)"><input type="checkbox" ${S.bulk.whatsapp?'checked':''} onchange="S.bulk.whatsapp=this.checked;render()"> WhatsApp</label>
+      <label class="row" style="margin:0;gap:6px;color:var(--text)"><input type="checkbox" ${S.bulk.email?'checked':''} onchange="S.bulk.email=this.checked;render()"> Email</label>
+      <button class="btn primary ${eligible?'':'dis'}" onclick="bulkEnroll()">Start for ${eligible} leads</button></div></div></div>
+    <div class="card">${filterBar(f,rows.length,'leads')}
+    ${selBar(pageRows)}
+    ${pageRows.length?`<table><tr><th style="width:28px"><input type="checkbox" title="Select all on this page" ${pageRows.every(l=>S.sel.has(l.key))?'checked':''} onchange="selPage(${JSON.stringify(pageRows.map(l=>l.key)).replace(/"/g,'&quot;')},this.checked)"></th><th>Business</th><th>Quality</th><th>Score</th><th class="hide-m">Hook</th><th>Channels</th><th class="hide-m">Follow-ups</th><th class="hide-m">Last contact</th><th>Status</th></tr>
+      ${pageRows.map(l=>`<tr class="click" onclick="drawer('${l.key}')"><td onclick="event.stopPropagation()"><input type="checkbox" ${S.sel.has(l.key)?'checked':''} onchange="selOne('${l.key}',this.checked)"></td><td><div class="biz">${hl(l.business,f.q)} ${l.unread?'<span class="pill p-lost">new reply</span>':''}</div><div class="small"><span class="ch" style="background:var(--violet2);color:var(--violet)">${esc(platLabel(l))}</span>${esc(hostOf(l.scan.site))} ${l.scan.is_uk?'':'· not UK'}</div></td>
+      <td>${qBadge(l)}</td><td>${sc(l.scan.unfinished_score)}</td><td class="hide-m small">${esc(ISSUE[l.hook]||'—')}</td><td>${chBadges(l)||'<span class="small">—</span>'}</td>
+      <td class="hide-m small">${['whatsapp','email'].filter(c=>l.seq[c]).map(c=>`${c==='email'?'Email':'WA'}: ${esc(l.seq[c].state)}`).join('<br>')||'—'}</td>
+      <td class="hide-m small">${lastContact(l)?hhmmDate(lastContact(l)):'—'}</td><td>${pill(l.status)}</td></tr>`).join('')}</table>
+      ${pages>1?`<div class="row" style="justify-content:center;margin-top:12px"><button class="btn sm ${f.page?'':'dis'}" onclick="S.filter.page--;render()">← Prev</button><span class="small">Page ${f.page+1} of ${pages}</span><button class="btn sm ${f.page<pages-1?'':'dis'}" onclick="S.filter.page++;render()">Next →</button></div>`:''}`
+      :'<div class="empty">No leads match these filters. <a href="#" onclick="resetFilter(\'leads\');return false">Clear filters</a></div>'}</div>`;
+  }
+  if(S.view==='pipeline'){
+    const cols=['new','contacted','talking','won','lost','do_not_contact'];
+    m.innerHTML=`<h1>Pipeline</h1><p class="sub">Where every UK conversation stands.</p><div class="kanban">${cols.map(c=>{const it=L.filter(l=>contactable(l)||l.status!=='new').filter(l=>l.status===c&&l.scan.is_uk);
+      return `<div class="col"><h4>${LABEL[c]}<span>${it.length}</span></h4>${it.map(l=>`<div class="kc" onclick="drawer('${l.key}')"><div class="biz">${esc(l.business)}</div><div class="small" style="margin-top:4px">${chBadges(l)} £${l.entry_price} · ${l.history.length} msgs</div></div>`).join('')}</div>`}).join('')}</div>`;
+  }
+  if(S.view==='sequences') renderSequences(m);
+  if(S.view==='companies'){ renderCompanies(m); setupBookmarklet(); }
+  if(S.view==='settings') renderSettings(m);
+  if(S.engine.stopping) m.insertAdjacentHTML('afterbegin',pausedBanner());
+  const pb=$('#pausebtn'); if(pb){pb.textContent=S.engine.stopping?'Stopping…':'■ STOP';pb.style.opacity=S.engine.stopping?.6:1;}
+}
+
+// ---------- sequences editor ----------
+function seqSource(){return S.seqSet==='company'?(S.sequence_sets?.company||{email:[],whatsapp:[]}):S.sequences;}
+function switchSet(v){S.seqSet=v;S.seqEdit=null;S.prevKey='';S.seqEdit=JSON.parse(JSON.stringify(seqSource()));render();}
+function renderSequences(m){
+  const E=S.seqEdit; const leadOpts=S.leads.filter(l=>contactable(l)&&((S.seqSet==='company')===(l.source==='company')));
+  const stepHtml=(ch,s,i)=>`<div class="step"><div class="row between"><b>${ch==='email'?'Email':'WhatsApp'} ${i+1}${i===0?' · first message':' · follow-up'}</b>
+    <div class="row"><span class="small">Day</span><input type="number" min="0" value="${s.day}" onchange="S.seqEdit.${ch}[${i}].day=+this.value">
+    ${E[ch].length>1?`<button class="btn sm danger" onclick="S.seqEdit.${ch}.splice(${i},1);render()">Remove</button>`:''}</div></div>
+    ${ch==='email'?`<label>Subject ${i>0?'(leave blank = reply in the same thread)':''}</label><input value="${esc(s.subject||'')}" oninput="S.seqEdit.email[${i}].subject=this.value">`:''}
+    <label>Message</label><textarea style="min-height:${ch==='email'?150:80}px" oninput="S.seqEdit.${ch}[${i}].body=this.value">${esc(s.body)}</textarea></div>`;
+  m.innerHTML=`<h1>Sequences</h1><p class="sub">The first message and the follow-ups, per channel. Any reply on any channel stops everything for that lead.</p>
+  <div class="tabs"><button class="${S.seqSet!=='company'?'on':''}" onclick="switchSet('main')">Builder-site leads</button><button class="${S.seqSet==='company'?'on':''}" onclick="switchSet('company')">Companies (Europages)</button></div>
+  <div class="hint" style="margin-bottom:14px">Placeholders: <code>{business}</code> <code>{hook}</code> (their worst verified problem) <code>{issues_bullets}</code> <code>{price}</code> <code>{site_short}</code> <code>{name}</code> <code>{portfolio}</code> <code>{signature}</code> <code>{opener}</code> (WhatsApp first message).
+  Every email automatically ends with an opt-out line, which is required for UK cold email.</div>
+  <div class="grid g2">
+    <div class="card"><h2>✉️ Email</h2>${E.email.map((s,i)=>stepHtml('email',s,i)).join('')}<button class="btn sm" onclick="S.seqEdit.email.push({day:(S.seqEdit.email.at(-1)?.day||0)+4,subject:'',body:''});render()">+ Add follow-up</button></div>
+    <div class="card"><h2>📱 WhatsApp</h2>${E.whatsapp.map((s,i)=>stepHtml('whatsapp',s,i)).join('')}<button class="btn sm" onclick="S.seqEdit.whatsapp.push({day:(S.seqEdit.whatsapp.at(-1)?.day||0)+3,body:''});render()">+ Add follow-up</button>
+      <div class="small" style="margin-top:10px">WhatsApp steps are never sent automatically. They appear in Today for you to send in one click.</div></div></div>
+  <div class="row" style="margin:14px 0"><button class="btn primary" onclick="saveSeq()">Save sequences</button><button class="btn" onclick="S.seqEdit=JSON.parse(JSON.stringify(seqSource()));render()">Undo changes</button>
+    <button class="btn danger" onclick="if(confirm('Reset to the default sequences?'))api('/api/sequences/reset?set='+(S.seqSet||'main'),{method:'POST'}).then(()=>{S.seqEdit=null;refresh();toast('Reset')})">Reset to defaults</button></div>
+  <div class="card"><div class="row between"><h2 style="margin:0">Preview with a real lead</h2><select style="width:auto" onchange="S.prevKey=this.value;showPreview()"><option value="">Choose a lead…</option>${leadOpts.map(l=>`<option value="${l.key}" ${S.prevKey===l.key?'selected':''}>${esc(l.business)}</option>`).join('')}</select></div>
+  <div class="small" style="margin-top:4px">Shows the saved version. Save first to preview your edits.</div><div id="prev"></div></div>`;
+  if(S.prevKey) showPreview();
+}
+async function showPreview(){ if(!S.prevKey) return; const p=await api('/api/preview/'+S.prevKey);
+  $('#prev').innerHTML=`<div class="grid g2" style="margin-top:12px"><div>${p.email.map((e,i)=>`<div class="small">Email ${i+1} · day ${e.day}</div><pre class="prev"><b>${esc(e.subject)}</b>\n\n${esc(e.body)}</pre>`).join('')}</div>
+  <div>${p.whatsapp.map((w,i)=>`<div class="small">WhatsApp ${i+1} · day ${w.day}</div><pre class="prev">${esc(w.body)}</pre>`).join('')}</div></div>`;}
+async function saveSeq(){try{await api('/api/sequences?set='+(S.seqSet||'main'),{method:'POST',body:S.seqEdit});toast('Sequences saved');S.seqEdit=null;await refresh();}catch(e){toast(e.message)}}
+
+// ---------- companies (Europages etc.) ----------
+S.co={parsed:[],minScore:3};
+function renderCompanies(m){
+  const C=S.leads.filter(l=>l.source==='company').sort((a,b)=>b.scan.unfinished_score-a.scan.unfinished_score);
+  const shown=filterLeads(C,S.cofilter), ms=S.cofilter.score||0;
+  const ready=C.filter(l=>l.status==='new'&&l.can_email&&!l.seq.email&&l.scan.unfinished_score>=Math.max(ms,1)).length;
+  const P=S.co.parsed, sel=P.filter(c=>c.sel).length;
+  m.innerHTML=`<h1>Companies</h1><p class="sub">UK companies from Europages → their own website → an audit of what makes it look dated → a redesign pitch. Separate from your builder-site leads.</p>
+  <div class="grid">${jobCard()}
+  <div class="card"><h2>🔎 Find UK companies automatically (Firecrawl)</h2>
+    ${S.settings.firecrawl_key?'':`<div class="warnbox" style="margin:8px 0">Add your Firecrawl API key in <a href="#" onclick="go('settings')">Settings</a> to use this.</div>`}
+    <div class="small">Firecrawl searches Google for real UK company websites (directories like Yell and Europages are left out). Scout then visits each site, pulls the phone, WhatsApp and email, and lists what's wrong with it. No manual browsing.</div>
+    <div class="row" style="margin-top:10px">
+      <select id="cf-s" style="width:auto">${(S.sectors||[]).map(x=>`<option value="${esc(x.label.toLowerCase())}">${esc(x.label)}</option>`).join('')}<option value="__custom">Other…</option></select>
+      <input id="cf-c" placeholder="or type a sector, e.g. kitchen fitters" style="max-width:220px">
+      <input id="cf-t" placeholder="towns, comma separated" value="${esc((S.settings.co_auto?.towns||[]).slice(0,3).join(', '))}" style="flex:1;min-width:220px">
+      <select id="cf-n" style="width:auto"><option value="10">10 per town</option><option value="20">20 per town</option></select>
+      <button class="btn primary ${S.settings.firecrawl_key?'':'dis'}" onclick="coFind()">Find companies</button></div>
+    <div class="small" style="margin-top:6px">Cost: 2 Firecrawl credits per 10 results${(S.settings.co_auto?.scan_with)==='firecrawl'?', plus about 2 per website checked':' (websites are checked free by Scout)'}.</div>
+    <details style="margin-top:12px"><summary style="cursor:pointer;font-weight:600">⚙️ Company Autopilot: find companies every day, automatically ${S.settings.co_auto?.enabled?'<span class="pill p-won">ON</span>':''}</summary>
+      ${(()=>{const c=S.settings.co_auto||{},t=S.engine.co_today||{};return `<div class="grid g2" style="gap:0 14px;margin-top:8px">
+        <div><label class="row" style="gap:6px;color:var(--text)"><input type="checkbox" id="ca-on" ${c.enabled?'checked':''}> Run every day</label>
+          <label>New companies per day</label><input id="ca-t" type="number" value="${c.daily_target}">
+          <label>Max Firecrawl searches per day</label><input id="ca-q" type="number" value="${c.max_searches_per_day}">
+          <label>Check websites with</label><select id="ca-w"><option value="builtin" ${c.scan_with!=='firecrawl'?'selected':''}>Scout's own browser (free, fuller audit)</option><option value="firecrawl" ${c.scan_with==='firecrawl'?'selected':''}>Firecrawl (~2 credits per site)</option></select>
+          <label class="row" style="gap:6px;color:var(--text);margin-top:12px"><input type="checkbox" id="ca-o" ${c.auto_outreach?'checked':''}> Start email outreach automatically for good leads</label>
+          <label>…only if lead quality is at least</label><input id="ca-mq" type="number" value="${c.min_quality??60}"></div>
+        <div><label>Sectors (comma separated)</label><textarea id="ca-s" style="min-height:60px">${esc((c.sectors||[]).join(', '))}</textarea>
+          <label>Towns (comma separated)</label><textarea id="ca-tw" style="min-height:80px">${esc((c.towns||[]).join(', '))}</textarea></div></div>
+        <div class="row" style="margin-top:10px"><button class="btn primary" onclick="saveCoAuto()">Save Company Autopilot</button>
+        <span class="small">Today: ${t.found||0}/${c.daily_target} found · ${t.searches||0} searches · ${t.started||0} started</span></div>`})()}
+    </details></div>
+  <div class="card"><h2>Or: open a sector on Europages</h2>
+    <div class="small">Each link opens Europages already filtered to the United Kingdom. ★ is the best place to start: lots of UK firms, often with dated websites, and orders big enough that a new site pays for itself.</div>
+    <div class="chips">${(S.sectors||[]).map((x,i)=>`<a class="chip" target="_blank" href="${x.link}">${i===0?'★ ':''}${esc(x.label)} ↗</a>`).join('')}</div>
+    <div class="small">On the results page press <b>Ctrl+A</b> then <b>Ctrl+C</b> to copy it all. Do the same for page 2, 3… to get more companies.</div></div>
+  <div class="card"><div class="row between"><div><h2 style="margin:0 0 4px">★ Fastest: the "Add to Scout" button</h2>
+    <div class="small">Drag this green button onto your browser's bookmarks bar (press <b>Ctrl+Shift+B</b> if you can't see the bar):</div></div>
+    <a class="btn primary" id="bmk" href="#" onclick="event.preventDefault();toast('Drag it to the bookmarks bar, don\'t click it here')">＋ Add to Scout</a></div>
+    <div class="small" style="margin-top:10px;line-height:1.6">Then while browsing Europages, click it on:<br>
+    • <b>a company or product page</b>: adds that company with its <b>exact website</b> (from the "Company's Website" button)<br>
+    • <b>a results page</b>: adds every company listed (Scout then finds their websites itself)<br>
+    A small panel counts what you've collected. Click <b>Send to Scout</b> and they appear below, ready to audit.</div></div>
+  <div class="card"><h2>2 · Or paste the page here</h2>
+    <textarea id="copaste" placeholder="Paste the Europages results page (or a list: one 'Company name, Town' per line)"></textarea>
+    <div class="row" style="margin-top:10px"><button class="btn primary" onclick="coParse()">Read companies</button><span class="small">Scout never visits Europages itself. It only reads what you paste.</span></div>
+    ${P.length?`<div style="margin-top:14px"><div class="row between"><b>${P.length} companies found · ${sel} selected</b>
+      <div class="row"><span class="small">Pages per site</span><select id="copp" style="width:auto"><option>1</option><option selected>2</option><option>3</option></select>
+      <button class="btn primary ${sel?'':'dis'}" onclick="coRun()">Find websites & audit (${sel})</button></div></div>
+      <table style="margin-top:8px"><tr><th></th><th>Company</th><th>Town</th><th class="hide-m">Staff</th><th class="hide-m">Type</th></tr>
+      ${P.map((c,i)=>`<tr><td><input type="checkbox" ${c.sel?'checked':''} onchange="S.co.parsed[${i}].sel=this.checked;render()"></td><td class="biz">${esc(c.name)} ${c.known?'<span class="small">(already added)</span>':''}</td><td class="small">${esc(c.city)}</td><td class="hide-m small">${esc(c.size)}</td><td class="hide-m small">${esc(c.type)}</td></tr>`).join('')}</table></div>`:''}
+  </div>
+  <div class="card"><div class="row between" style="margin-bottom:10px"><h2 style="margin:0">3 · Companies (${C.length})</h2>
+    <div class="row"><span class="small">Price in messages £</span><input type="number" style="width:90px" value="${S.settings.company_price||495}" onchange="api('/api/co/settings',{method:'POST',body:{company_price:+this.value}}).then(()=>{toast('Price updated');refresh()})">
+      <button class="btn primary ${ready?'':'dis'}" onclick="coEnroll()">Start email outreach (${ready})</button></div></div>
+    ${filterBar(S.cofilter,shown.length,'co')}
+    ${selBar(shown)}
+    ${shown.length?`<table><tr><th style="width:28px"><input type="checkbox" title="Select all" ${shown.every(l=>S.sel.has(l.key))?'checked':''} onchange="selPage(${JSON.stringify(shown.map(l=>l.key)).replace(/"/g,'&quot;')},this.checked)"></th><th>Company</th><th>Website</th><th>Quality</th><th>Score</th><th class="hide-m">Main problems</th><th>Contact</th><th>Status</th></tr>
+      ${shown.map(l=>`<tr class="click" onclick="drawer('${l.key}')"><td onclick="event.stopPropagation()"><input type="checkbox" ${S.sel.has(l.key)?'checked':''} onchange="selOne('${l.key}',this.checked)"></td><td><div class="biz">${hl(l.business,S.cofilter.q)} ${l.unread?'<span class="pill p-lost">new reply</span>':''}</div><div class="small">${esc(l.company?.city||'')}${l.company?.size?' · '+esc(l.company.size)+' staff':''}</div></td>
+      <td class="small"><a href="${esc(l.website)}" target="_blank" onclick="event.stopPropagation()">${esc(l.website.replace(/^https?:\/\//,''))}</a><br>${l.found_by==='search'?'found by search':'matched by name'}</td>
+      <td>${qBadge(l)}</td><td>${sc(l.scan.unfinished_score)}</td><td class="hide-m small">${l.scan.issues.slice(0,3).map(i=>esc(ISSUE[i.issue]||i.issue)).join(', ')||'Looks fine'}</td>
+      <td>${chBadges(l)||'<span class="small">none found</span>'}</td><td>${pill(l.status)}${l.seq.email?`<div class="small">${esc(l.seq.email.state)}</div>`:''}</td></tr>`).join('')}</table>`
+      :`<div class="empty">${C.length?'No companies match these filters. Try "Any score" or clear the search.':'No companies yet. Paste a Europages page above.'}</div>`}
+  </div>
+  ${(S.co_unresolved||[]).length?`<div class="card"><div class="row between"><h2 style="margin:0">Website not found (${S.co_unresolved.length})</h2><button class="btn sm" onclick="api('/api/co/settings',{method:'POST',body:{clear_unresolved:true}}).then(refresh)">Clear list</button></div>
+    <div class="small" style="margin:6px 0 8px">Some of these may have no website at all, which is a lead for a brand-new site. Look them up yourself, then paste their website into Discover, or add a search engine for better matching.</div>
+    ${S.co_unresolved.slice(-40).reverse().map(u=>`<div class="line"><span>${esc(u.name)} <span class="small">${esc(u.city||'')}</span></span><a class="small" target="_blank" href="https://www.google.com/search?q=${encodeURIComponent(u.name+' '+(u.city||''))}">Look up ↗</a></div>`).join('')}</div>`:''}
+  </div>`;
+}
+async function setupBookmarklet(){const el=$('#bmk');if(!el||el.dataset.ok)return;
+  try{const js=await fetch('/collector.js').then(r=>r.text());el.href='javascript:'+encodeURIComponent(js.replace(/\n/g,' '));el.dataset.ok=1;}catch(e){}}
+function takeCollected(){const h=location.hash;if(!h.startsWith('#collect='))return;
+  try{const list=JSON.parse(decodeURIComponent(h.slice(9)));history.replaceState(null,'',location.pathname);
+    const known=new Set(S.leads.filter(l=>l.source==='company').map(l=>l.company?.name?.toLowerCase()));
+    S.co.parsed=list.map(c=>({name:c.name,city:c.city||'',country:c.country||'United Kingdom',website:c.website||'',profile:c.profile||'',size:'',type:c.website?'website from Europages':'',known:known.has(c.name.toLowerCase()),sel:!known.has(c.name.toLowerCase())}));
+    go('companies');toast(`Received ${list.length} companies from Europages`);}catch(e){toast('Could not read the collected companies')}}
+async function coFind(){const sec=($('#cf-c').value.trim()||$('#cf-s').value).replace('__custom','');if(!sec)return toast('Choose or type a sector');
+  const towns=$('#cf-t').value.split(',').map(x=>x.trim()).filter(Boolean);if(!towns.length)return toast('Add at least one town');
+  try{await api('/api/co/find',{method:'POST',body:{sector:sec,towns,per_search:+$('#cf-n').value}});toast(`Searching for ${sec} in ${towns.length} town(s)…`);refresh();}catch(e){toast(e.message)}}
+async function saveCoAuto(){await api('/api/settings',{method:'POST',body:{co_auto:{enabled:$('#ca-on').checked,daily_target:+$('#ca-t').value,max_searches_per_day:+$('#ca-q').value,
+  scan_with:$('#ca-w').value,auto_outreach:$('#ca-o').checked,min_quality:+$('#ca-mq').value,sectors:$('#ca-s').value,towns:$('#ca-tw').value}}});toast('Company Autopilot saved');refresh();}
+async function coParse(){const t=$('#copaste').value;if(!t.trim())return toast('Paste the page first');
+  const r=await api('/api/co/parse',{method:'POST',body:{text:t}});S.co.parsed=r.companies.map(c=>({...c,sel:!c.known}));
+  toast(r.companies.length?`Found ${r.companies.length} companies`:'No companies found in that text');render();}
+async function coRun(){const items=S.co.parsed.filter(c=>c.sel);
+  try{const r=await api('/api/co/run',{method:'POST',body:{companies:items,pages:+($('#copp')?.value||2)}});toast(`Finding websites for ${r.total} companies…`);S.co.parsed=[];refresh();}catch(e){toast(e.message)}}
+async function coEnroll(){if(!confirm('Start the company email sequence for every new company with a poor website and a verified email?'))return;
+  const r=await api('/api/co/enroll?min_quality='+(S.settings.co_auto?.min_quality??60)+'&min_score='+Math.max(S.cofilter.score||0,1),{method:'POST',body:{channels:['email']}});toast(`Started ${r.email} email sequences`);refresh();}
+
+// ---------- settings ----------
+function renderSettings(m){
+  const s=S.settings,e=s.email;
+  m.innerHTML=`<h1>Settings</h1><p class="sub">Stored only in scout_data.json on this computer.</p>
+  <div class="grid g2" style="align-items:start">
+  <div class="card"><h2>You</h2>
+    <label>Your name (used in messages)</label><input id="s-name" value="${esc(s.name)}">
+    <label>Portfolio link</label><input id="s-port" value="${esc(s.portfolio)}" placeholder="https://…">
+    <label>Gemini API key, for AI replies ${s.gemini_key?'<span class="ok">✓ saved</span>':''}</label><input id="s-gem" type="password" placeholder="${s.gemini_key?'leave blank to keep':'from aistudio.google.com'}">
+    <h2 style="margin-top:24px">Finding sites</h2>
+    <div class="small">${S.settings.searxng_env?'✓ Built-in search engine (SearXNG) is connected.':'Built-in search engine (SearXNG) runs automatically on the Linux server. If you run your own elsewhere, enter its address.'} The free archives (Common Crawl, Internet Archive, certificate logs) always work without any key. Keys below are optional extras.</div>
+    ${S.settings.searxng_env?'':`<label>SearXNG address (optional)</label><input id="s-sx" value="${esc(s.searxng_url)}" placeholder="http://127.0.0.1:8080">`}
+    <label>Firecrawl API key (optional) ${s.firecrawl_key?'<span class="ok">✓ saved</span>':''}</label><input id="s-fc" type="password" placeholder="${s.firecrawl_key?'leave blank to keep':'fc-…  from firecrawl.dev'}">
+    <label>Serper API key (optional) ${s.serper_key?'<span class="ok">✓ saved</span>':''}</label><input id="s-ser" type="password" placeholder="${s.serper_key?'leave blank to keep':'from serper.dev'}">
+    <div style="margin-top:16px"><button class="btn primary" onclick="saveSettings()">Save</button></div>
+    <h2 style="margin-top:24px">Autopilot</h2>
+    <div class="grid g2" style="gap:0 12px">
+      <div><label>Daily target (new leads)</label><input id="a-t" type="number" value="${s.autopilot.daily_target}"></div>
+      <div><label>Skip sites scoring below</label><input id="a-ms" type="number" value="${s.autopilot.min_score}"></div>
+      <div><label>Only contact leads with quality ≥ (0–100)</label><input id="a-mq" type="number" value="${s.autopilot.min_quality??60}"></div>
+      <div><label>Max searches per day</label><input id="a-q" type="number" value="${s.autopilot.max_searches_per_day}"></div>
+      <div><label>Max sites scanned per day</label><input id="a-sc" type="number" value="${s.autopilot.max_scans_per_day}"></div></div>
+    <label class="row" style="color:var(--text);gap:8px"><input type="checkbox" id="a-ad" ${s.autopilot.auto_discover?'checked':''}> Find and scan new sites by itself when it runs out (free, no key needed)</label>
+    <label>Niches to search (comma separated)</label><textarea id="a-n" style="min-height:60px">${esc(s.autopilot.niches.join(', '))}</textarea>
+    <label>Cities</label><textarea id="a-c" style="min-height:50px">${esc(s.autopilot.cities.join(', '))}</textarea>
+    <div style="margin-top:12px"><button class="btn primary" onclick="apSave({daily_target:+$('#a-t').value,min_score:+$('#a-ms').value,min_quality:+$('#a-mq').value,max_searches_per_day:+$('#a-q').value,max_scans_per_day:+$('#a-sc').value,auto_discover:$('#a-ad').checked,niches:$('#a-n').value,cities:$('#a-c').value})">Save autopilot</button></div>
+    <div class="small" style="margin-top:8px">Your email daily limit (right) also caps follow-ups. With a target of N/day and 4 email steps, set it to around N × 2.5 once the sequences are running.</div>
+    <h2 style="margin-top:24px">Do-not-contact list (${S.suppression.length})</h2><div class="small">${S.suppression.map(esc).join(', ')||'Empty. People who opt out are added automatically and never contacted again.'}</div>
+  </div>
+  <div class="card"><h2>Email sending</h2>
+    <div class="warnbox">Use a <b>separate mailbox</b> for cold email (e.g. you@getyoursite.co.uk on Google Workspace or Zoho), not your main address, so a spam complaint never hurts your main inbox. Start at 20–30/day and raise slowly.</div>
+    <label>Provider</label><select id="e-prov" onchange="fillPreset(this.value)"><option value="">Choose to fill in servers…</option><option value="gmail">Gmail / Google Workspace</option><option value="zoho">Zoho Mail (UK/EU)</option><option value="outlook">Outlook / Microsoft 365</option></select>
+    <div class="grid g2" style="gap:0 12px">
+      <div><label>From name</label><input id="e-fname" value="${esc(e.from_name)}" placeholder="e.g. Sam from FixMySite"></div>
+      <div><label>From email</label><input id="e-from" value="${esc(e.from_email)}" placeholder="you@yourdomain.co.uk"></div>
+      <div><label>Login username (if different)</label><input id="e-user" value="${esc(e.smtp_user)}"></div>
+      <div><label>App password ${e.smtp_pass?'<span class="ok">✓ saved</span>':''}</label><input id="e-pass" type="password" placeholder="${e.smtp_pass?'leave blank to keep':'not your normal password'}"></div>
+      <div><label>SMTP server</label><input id="e-sh" value="${esc(e.smtp_host)}"></div><div><label>SMTP port</label><input id="e-sp" type="number" value="${e.smtp_port}"></div>
+      <div><label>IMAP server (reply detection)</label><input id="e-ih" value="${esc(e.imap_host)}"></div><div><label>IMAP port</label><input id="e-ip" type="number" value="${e.imap_port}"></div>
+      <div><label>Max cold emails per day</label><input id="e-cap" type="number" value="${e.daily_cap}"></div>
+      <div><label>Email starts N days after WhatsApp</label><input id="e-delay" type="number" value="${e.email_delay_days_if_whatsapp}"></div>
+      <div><label>Send from (UK hour)</label><input id="e-sh1" type="number" value="${e.start_hour}"></div><div><label>Send until (UK hour)</label><input id="e-sh2" type="number" value="${e.end_hour}"></div>
+      <div><label>Gap between emails, min seconds</label><input id="e-g1" type="number" value="${e.gap_min_s}"></div><div><label>Gap, max seconds</label><input id="e-g2" type="number" value="${e.gap_max_s}"></div>
+    </div>
+    <label class="row" style="color:var(--text);gap:8px"><input type="checkbox" id="e-wd" ${e.weekdays_only?'checked':''}> Weekdays only</label>
+    <div class="row" style="margin-top:14px"><button class="btn primary" onclick="saveEmail()">Save email settings</button><button class="btn" onclick="testEmail()">Send test email to myself</button><button class="btn" onclick="checkInbox()">Test inbox connection</button></div>
+    <div class="small" style="margin-top:10px">Gmail/Workspace: turn on 2-Step Verification, then create an App Password at myaccount.google.com/apppasswords. Zoho: Settings → Security → App Passwords.</div>
+  </div>
+  <div class="card" style="grid-column:1/-1"><h2>⚡ Speed</h2>
+    <div class="grid g2" style="gap:0 16px">
+      <div><label>Sites to check at the same time</label><select id="sp-w">${[1,2,3,4,6,8].map(n=>`<option ${+(S.settings.scan_workers||4)===n?'selected':''}>${n}</option>`).join('')}</select>
+        <div class="small" style="margin-top:4px">4 suits most laptops. Each one is a hidden browser (about 200–300 MB of memory). Use 6–8 on a powerful PC.</div></div>
+      <div><label>Pages checked per site</label><select id="sp-p">${[[1,'1 (fastest, homepage only)'],[2,'2 (homepage + contact page)'],[3,'3 (most thorough)']].map(([n,t])=>`<option value="${n}" ${+(S.settings.scan_pages||2)===n?'selected':''}>${t}</option>`).join('')}</select>
+        <div class="small" style="margin-top:4px">2 finds nearly all contacts. Most contact details are on the homepage or contact page.</div></div></div>
+    <div style="margin-top:12px"><button class="btn primary" onclick="api('/api/settings',{method:'POST',body:{scan_workers:+$('#sp-w').value,scan_pages:+$('#sp-p').value}}).then(()=>{toast('Speed saved');refresh()})">Save speed</button></div></div>
+  <div class="card" style="grid-column:1/-1"><h2>🧱 Platforms to find sites on</h2>
+    <div class="small">Sites still on these free addresses are often unfinished DIY builds. Switched-on platforms are used by Autopilot, archive discovery and the search presets.</div>
+    <div class="row" style="margin-top:10px;gap:14px">${(S.platforms||[]).map(p=>`<label class="row" style="margin:0;gap:6px;color:var(--text);font-weight:500"><input type="checkbox" class="plat-cb" value="${p.domain}" ${p.on?'checked':''}> ${esc(p.label)} <span class="small">.${p.domain}</span></label>`).join('')}</div>
+    <div style="margin-top:12px"><button class="btn primary" onclick="api('/api/settings',{method:'POST',body:{platforms:Object.fromEntries([...document.querySelectorAll('.plat-cb')].map(c=>[c.value,c.checked]))}}).then(()=>{toast('Platforms saved');refresh()})">Save platforms</button></div></div>
+  <div class="card" style="grid-column:1/-1"><h2>🗣️ How your messages sound</h2>
+    <div class="small" style="margin-bottom:10px">Applies to every AI-drafted reply. Nothing here is ever shown to leads.</div>
+    <div class="grid g2" style="align-items:start">
+      <div>
+        <label>Directness: <b id="vd-l">${['','Very gentle','Gentle','Balanced','Fairly direct','Direct'][s.voice.directness]}</b></label>
+        <input type="range" min="1" max="5" id="v-dir" value="${s.voice.directness}" oninput="$('#vd-l').textContent=['','Very gentle','Gentle','Balanced','Fairly direct','Direct'][this.value]">
+        <label>Warmth: <b id="vw-l">${['','Businesslike','Polite','Friendly','Warm','Very warm'][s.voice.warmth]}</b></label>
+        <input type="range" min="1" max="5" id="v-warm" value="${s.voice.warmth}" oninput="$('#vw-l').textContent=['','Businesslike','Polite','Friendly','Warm','Very warm'][this.value]">
+        <div class="grid g2" style="gap:0 12px">
+          <div><label>Length</label><select id="v-len">${[['very_short','Very short'],['short','Short'],['medium','Medium'],['long','Longer']].map(([v,t])=>`<option value="${v}" ${s.voice.length===v?'selected':''}>${t}</option>`).join('')}</select></div>
+          <div><label>Tone</label><select id="v-form">${[['casual','Casual'],['balanced','Balanced'],['professional','Professional']].map(([v,t])=>`<option value="${v}" ${s.voice.formality===v?'selected':''}>${t}</option>`).join('')}</select></div>
+          <div><label>Emoji</label><select id="v-emo">${[['none','Never'],['rare','Rarely'],['some','Sometimes']].map(([v,t])=>`<option value="${v}" ${s.voice.emoji===v?'selected':''}>${t}</option>`).join('')}</select></div>
+          <div><label>End with a question</label><select id="v-q">${[['natural','Only when natural'],['always','Always'],['rarely','Rarely']].map(([v,t])=>`<option value="${v}" ${s.voice.end_question===v?'selected':''}>${t}</option>`).join('')}</select></div>
+        </div>
+        <label>Never use these words/phrases (comma separated)</label><input id="v-ban" value="${esc(s.voice.banned)}" placeholder="e.g. quick heads-up, game-changer, boost">
+      </div>
+      <div>
+        <label>Your style notes (always followed)</label><textarea id="v-notes" style="min-height:90px" placeholder="e.g. Always say I'm based in the UK. Use 'cheers' not 'thanks'. Never mention prices by text, offer a call instead. Keep it relaxed.">${esc(s.voice.notes)}</textarea>
+        <label>Examples of messages you've written (the AI copies your voice)</label><textarea id="v-ex" style="min-height:90px" placeholder="Paste 2-5 real messages you've sent to customers.">${esc(s.voice.examples)}</textarea>
+      </div></div>
+    <div class="row" style="margin-top:12px"><button class="btn primary" onclick="saveVoice()">Save voice</button></div>
+    <div style="background:var(--panel2);border-radius:8px;padding:12px;margin-top:14px"><b>Test it</b> <span class="small">Save first, then type what a lead might say:</span>
+      <div class="row" style="margin-top:8px"><input id="vt-msg" value="Yes please, what did you find?" style="flex:1;min-width:220px"><button class="btn" id="vt-b" onclick="testVoice()">Draft a reply</button></div>
+      <div id="vt-out" style="margin-top:10px"></div></div>
+  </div>
+  <div class="card" style="grid-column:1/-1"><h2>📱 WhatsApp automation</h2>
+    <div class="grid g2" style="align-items:start">
+      <div><label style="margin-top:0">Send WhatsApp using</label>
+        <div class="tabs"><button class="${(s.whatsapp.sender||'browser')==='browser'?'on':''}" onclick="api('/api/settings',{method:'POST',body:{whatsapp:{sender:'browser'}}}).then(refresh)">My WhatsApp Web (Chrome)</button>
+        <button class="${s.whatsapp.sender==='service'?'on':''}" onclick="api('/api/settings',{method:'POST',body:{whatsapp:{sender:'service'}}}).then(refresh)">Built-in (QR scan)</button></div>
+        <div id="wa-box" class="small">Checking WhatsApp connection…</div></div>
+      <div>
+        <div class="warnbox">Use a <b>separate WhatsApp Business number</b> (a spare SIM), not your personal one. Automated cold messages can get a number restricted, and the limits below keep that risk low. Hard limit: 100 a day.</div>
+        <label class="row" style="color:var(--text);gap:8px;margin-top:14px"><input type="checkbox" id="w-auto" ${s.whatsapp.auto?'checked':''}> Send WhatsApp sequence messages automatically</label>
+        <div class="grid g2" style="gap:0 12px">
+          <div><label>Max per day (≤ 100)</label><input id="w-cap" type="number" max="100" value="${s.whatsapp.daily_cap}"></div>
+          <div><label class="row" style="gap:8px;margin-top:34px;color:var(--text)"><input type="checkbox" id="w-warm" ${s.whatsapp.warmup?'checked':''}> Warm-up (10/day, +5 per day)</label></div>
+          <div><label>Send from (UK hour)</label><input id="w-h1" type="number" value="${s.whatsapp.start_hour}"></div><div><label>Send until (UK hour)</label><input id="w-h2" type="number" value="${s.whatsapp.end_hour}"></div>
+          <div><label>Gap between messages, min seconds</label><input id="w-g1" type="number" value="${s.whatsapp.gap_min_s}"></div><div><label>Gap, max seconds</label><input id="w-g2" type="number" value="${s.whatsapp.gap_max_s}"></div>
+        </div>
+        <label class="row" style="color:var(--text);gap:8px"><input type="checkbox" id="w-wd" ${s.whatsapp.weekdays_only?'checked':''}> Weekdays only</label>
+        <div style="margin-top:12px"><button class="btn primary" onclick="saveWA()">Save WhatsApp settings</button></div>
+      </div></div></div>
+  </div>`;
+  waBox();
+}
+async function waBox(){const el=$('#wa-box');if(!el)return;
+  if((S.settings.whatsapp?.sender||'browser')==='browser'){
+    const i=await api('/api/wa/browser-info').catch(()=>({}));if(!$('#wa-box'))return;
+    el.innerHTML=`${i.connected?'<div class="ok" style="font-size:15px">● Connected to your WhatsApp Web</div><div class="small" style="margin:4px 0 12px">Keep a WhatsApp Web tab open in Chrome. Scout sends through it and picks up replies from leads.</div>'
+      :'<div class="warnbox">Not connected yet. Set it up once (2 minutes):</div>'}
+    <ol style="line-height:1.7;padding-left:18px;margin:10px 0">
+      <li><a href="/whatsapp-extension.zip">Download the Scout WhatsApp extension</a> and unzip it.</li>
+      <li>In Chrome open <b>chrome://extensions</b>, switch on <b>Developer mode</b> (top right), click <b>Load unpacked</b> and pick the unzipped <b>scout-whatsapp-extension</b> folder.</li>
+      <li>Click the extension's icon (puzzle piece → Scout WhatsApp Sender), enter the address and code below, and click <b>Save & test</b>.</li>
+      <li>Open <b>web.whatsapp.com</b> in a tab and leave it open (it can be in the background).</li></ol>
+    <label>Scout address</label><input readonly value="${location.origin}" onclick="this.select()">
+    <label>Connection code</label><input readonly value="${esc(i.token||'')}" onclick="this.select();navigator.clipboard?.writeText(this.value);toast('Code copied')">
+    <div class="small" style="margin-top:8px">Then tick "Send automatically" (right) and save. Messages go out one at a time within your limits, and you'll see them in WhatsApp as normal.</div>`;
+    if(!i.connected&&S.view==='settings') setTimeout(waBox,8000); return;}
+  let st;try{st=await api('/api/wa/status')}catch(e){st={state:'offline'}}
+  if(!$('#wa-box'))return;
+  const msg={ready:`<div class="ok" style="font-size:15px">● Connected${st.me?' as +'+esc(st.me):''}</div><div class="small" style="margin:6px 0 12px">Replies on this number are picked up automatically and stop the follow-ups.</div><button class="btn sm danger" onclick="if(confirm('Disconnect this WhatsApp number?'))api('/api/wa/logout',{method:'POST'}).then(()=>setTimeout(waBox,4000))">Disconnect</button>`,
+    qr:`<b>Scan to connect</b><div class="small" style="margin:6px 0">On the phone: WhatsApp → Settings → Linked devices → Link a device.</div><img src="${st.qr}" style="width:260px;max-width:100%;background:#fff;padding:8px;border-radius:10px">`,
+    starting:'Starting WhatsApp… (up to a minute)',authenticated:'Logging in…',offline:`<div class="warnbox">The WhatsApp service isn't running. On a server it starts with Docker; on a laptop the launcher starts it. ${esc(st.lastError||'')}</div>`};
+  el.innerHTML=msg[st.state]||`<div class="warnbox">WhatsApp: ${esc(st.state)} ${esc(st.lastError||'')}</div>`;
+  if(st.state!=='ready'&&S.view==='settings') setTimeout(waBox,4000);}
+async function saveVoice(){await api('/api/settings',{method:'POST',body:{voice:{directness:+$('#v-dir').value,warmth:+$('#v-warm').value,length:$('#v-len').value,
+  formality:$('#v-form').value,emoji:$('#v-emo').value,end_question:$('#v-q').value,banned:$('#v-ban').value,notes:$('#v-notes').value,examples:$('#v-ex').value}}});toast('Voice saved: all new drafts will use it');refresh();}
+async function testVoice(){const b=$('#vt-b');b.classList.add('dis');b.textContent='Drafting…';
+  try{const r=await api('/api/voice/test',{method:'POST',body:{message:$('#vt-msg').value}});
+    $('#vt-out').innerHTML=`<div class="bub them" style="max-width:100%">${esc($('#vt-msg').value)}</div><div class="bub me" style="max-width:100%;margin-top:6px">${esc(r.draft)}<div class="t">${r.source==='ai'?'AI':'template (AI not connected: add a Gemini key)'} · as if to ${esc(r.lead)}</div></div>`;}
+  catch(e){toast(e.message)} b.classList.remove('dis');b.textContent='Draft a reply';}
+async function saveWA(){await api('/api/settings',{method:'POST',body:{whatsapp:{auto:$('#w-auto').checked,daily_cap:+$('#w-cap').value,warmup:$('#w-warm').checked,
+  start_hour:+$('#w-h1').value,end_hour:+$('#w-h2').value,gap_min_s:+$('#w-g1').value,gap_max_s:+$('#w-g2').value,weekdays_only:$('#w-wd').checked}}});toast('WhatsApp settings saved');refresh();}
+function fillPreset(p){const v=PRESETS[p];if(!v)return;$('#e-sh').value=v[0];$('#e-sp').value=v[1];$('#e-ih').value=v[2];$('#e-ip').value=v[3];
+  if(p==='outlook')toast('Note: some Microsoft accounts block app passwords. If login fails, use Gmail/Workspace or Zoho.');}
+async function saveSettings(){await api('/api/settings',{method:'POST',body:{name:$('#s-name').value,portfolio:$('#s-port').value,gemini_key:$('#s-gem').value,serper_key:$('#s-ser').value,firecrawl_key:$('#s-fc').value,searxng_url:$('#s-sx')?.value}});toast('Saved');refresh();}
+async function saveEmail(){const g=id=>$(id).value;
+  await api('/api/settings',{method:'POST',body:{email:{from_name:g('#e-fname'),from_email:g('#e-from'),smtp_user:g('#e-user'),smtp_pass:g('#e-pass'),smtp_host:g('#e-sh'),smtp_port:g('#e-sp'),
+    imap_host:g('#e-ih'),imap_port:g('#e-ip'),daily_cap:g('#e-cap'),email_delay_days_if_whatsapp:g('#e-delay'),start_hour:g('#e-sh1'),end_hour:g('#e-sh2'),gap_min_s:g('#e-g1'),gap_max_s:g('#e-g2'),weekdays_only:$('#e-wd').checked}}});
+  toast('Email settings saved');refresh();}
+async function testEmail(){try{const r=await api('/api/email/test',{method:'POST',body:{}});toast('Test sent to '+r.to+'. Check your inbox.');}catch(e){toast(e.message)}}
+
+// ---------- discover ----------
+function renderFound(){const el=$('#found');if(!el||!S.found.length)return;
+  el.innerHTML=`<div style="margin-top:14px"><div class="row between"><b>${S.found.length} sites found</b><button class="btn primary sm" onclick="doScan([...document.querySelectorAll('.fu:checked')].map(c=>c.value))">Scan selected</button></div>
+  ${S.found.map(f=>`<label class="row" style="margin:8px 0;font-weight:500;color:var(--text)"><input type="checkbox" class="fu" value="${f.url}" ${f.isNew?'checked':''}> ${esc(f.url)} ${f.isNew?'':'<span class="small">(already scanned)</span>'}</label>`).join('')}</div>`;}
+async function doSearch(){const q=$('#q').value.trim();if(!q)return;const b=$('#sbtn');b.classList.add('dis');b.textContent='Searching…';const g=S.searchGen=(S.searchGen||0)+1;
+  try{const r=await api('/api/search',{method:'POST',body:{query:q,pages:+$('#qp').value}});if(g!==S.searchGen)return;S.found=r.urls.map(u=>({url:u,isNew:r.new.includes(u)}));renderFound();toast(`${r.urls.length} sites, ${r.new.length} new`);}catch(e){toast(e.message)}
+  b.classList.remove('dis');b.textContent='Search';}
+async function doScan(urls){urls=urls.map(u=>u.trim()).filter(Boolean);if(!urls.length)return toast('No URLs');
+  try{const r=await api('/api/scan',{method:'POST',body:{urls,pages:+($('#pp')?.value||3)}});toast(`Scanning ${r.total} sites…`);S.found=[];refresh();}catch(e){toast(e.message)}}
+async function bulkEnroll(){const ch=Object.keys(S.bulk).filter(k=>S.bulk[k]);if(!ch.length)return;
+  if(!confirm(`Start follow-up sequences (${ch.join(' + ')}) for all new eligible leads?`))return;
+  const r=await api('/api/enroll?min_quality='+(S.settings.autopilot?.min_quality??60),{method:'POST',body:{channels:ch}});toast(`Started: ${r.whatsapp} WhatsApp, ${r.email} email`);refresh();}
+
+// ---------- lead drawer ----------
+function drawer(k,keep){
+  const l=S.leads.find(x=>x.key===k);if(!l)return;S.open=k;const s=l.scan;
+  if(!keep){const lastThem=[...l.history].reverse().find(h=>h.from==='them');S.tab=lastThem?lastThem.channel:(l.number?'whatsapp':'email');if(S.tab==='whatsapp'&&!l.number)S.tab='email';}
+  const keepVals=keep?{draft:$('#draft')?.value,their:$('#their')?.value,esubj:$('#esubj')?.value,ebody:$('#ebody')?.value}:{};
+  const waFirst=!l.history.some(h=>h.from==='me'&&h.channel==='whatsapp');
+  const seqBtns=(ch)=>{const q=l.seq[ch],can=ch==='email'?l.can_email:l.can_wa;
+    if(!q||['stopped','done','manual'].includes(q.state))return can?`<button class="btn sm primary" onclick="seqAct('${k}','${ch}','start')">${q?'Restart':'Start'} sequence</button>`:'';
+    return q.state==='active'?`<button class="btn sm" onclick="seqAct('${k}','${ch}','pause')">Pause</button><button class="btn sm danger" onclick="seqAct('${k}','${ch}','stop')">Stop</button>`
+      :`<button class="btn sm primary" onclick="seqAct('${k}','${ch}','resume')">Resume</button><button class="btn sm danger" onclick="seqAct('${k}','${ch}','stop')">Stop</button>`;};
+  $('#drawer').innerHTML=`<div class="dhead"><div style="flex:1;min-width:0"><div class="biz" style="font-size:17px">${esc(l.business)}</div>
+    <a class="small" target="_blank" href="${s.site}">${s.site.replace('https://','')} ↗</a></div>
+    <select onchange="patch('${k}',{status:this.value})" style="width:auto">${STATUSES.map(x=>`<option value="${x}" ${l.status===x?'selected':''}>${LABEL[x]}</option>`).join('')}</select>
+    <button class="btn sm" onclick="closeDrawer()">✕</button></div>
+  <div class="dbody">
+    ${qualityCard(l)}
+    <div class="card sec"><h3>Outreach & follow-ups</h3>
+      <div class="line"><div><span class="ch ch-wa">WA</span> ${l.number?fmtNum(l.number):'<span class="small">no UK mobile</span>'}<div style="margin-top:4px">${seqLabel(l.seq.whatsapp,'whatsapp')}</div></div><div class="row">${seqBtns('whatsapp')}</div></div>
+      <div class="line"><div style="flex:1"><span class="ch ch-em">EMAIL</span> ${l.email?esc(l.email):'<span class="small">no verified email</span>'} ${l.email_status==='bounced'?'<span class="pill p-lost">bounced</span>':''}
+        <div style="margin-top:4px">${seqLabel(l.seq.email,'email')}</div></div><div class="row">${seqBtns('email')}</div></div>
+      ${s.emails.length>1?`<label>Email to use</label><select onchange="patch('${k}',{email:this.value})">${s.emails.map(e=>`<option ${e.email===l.email?'selected':''}>${esc(e.email)}</option>`).join('')}</select>`:''}
+      ${(l.errors||[]).slice(-2).map(e=>`<div class="warnbox" style="margin-top:8px">${esc(e)}</div>`).join('')}
+    </div>
+    ${l.pending_draft?`<div class="card sec"><h3>✍️ Drafted reply, waiting for your OK</h3>${draftCard({key:l.key,business:l.business,...l.pending_draft,
+        shots:((S.today.drafts||[]).find(x=>x.key===l.key)||{}).shots||[],subject:l.seq?.email?.subject?'Re: '+l.seq.email.subject:''})}</div>`
+      :(l.history.some(h=>h.from==='them')?`<div class="card sec"><h3>✍️ Reply</h3><div class="chips"><span class="small" style="align-self:center">Draft a reply:</span>${QUICK.map(([i,t])=>`<button class="chip" onclick="regen('${l.key}','${i}').then(()=>drawer('${l.key}',true))">${t}</button>`).join('')}</div></div>`:'')}
+    <div class="card sec"><h3>Conversation</h3>
+      <div class="thread" id="thread">${l.history.map(h=>`<div class="bub ${h.from}${h.from==='me'&&h.channel==='email'?' em':''}">${h.subject?`<b>${esc(h.subject)}</b>\n`:''}${esc(h.text)}<div class="t">${h.channel==='email'?'✉️ Email':'📱 WhatsApp'} · ${h.from==='me'?(h.auto?'sent automatically':'You'):'Them'} · ${esc((h.at||'').replace('T',' '))}</div></div>`).join('')||'<div class="small">No messages yet.</div>'}</div>
+      <div class="tabs" style="margin-top:12px"><button class="${S.tab==='whatsapp'?'on':''}" onclick="S.tab='whatsapp';drawer('${k}',true)">📱 WhatsApp</button><button class="${S.tab==='email'?'on':''}" onclick="S.tab='email';drawer('${k}',true)">✉️ Email</button></div>
+      ${S.tab==='whatsapp'?(l.number?`
+        ${l.history.length?`<label>Got a WhatsApp reply? Paste it here (stops all follow-ups)</label><textarea id="their" style="min-height:60px">${esc(keepVals.their||'')}</textarea>
+          <div class="row" style="margin-top:8px"><button class="btn" id="dbtn" onclick="draftReply('${k}')">✨ Log reply + draft my answer</button></div>`:''}
+        <label>${waFirst?'First message':'Your next message'} <span class="small" id="dsrc"></span></label><textarea id="draft">${esc(keepVals.draft??(waFirst?(l.opener||''):''))}</textarea>
+        <div class="row" style="margin-top:8px"><a class="btn wa" target="_blank" onclick="this.href=wa('${l.number}',$('#draft').value)" href="#">Open in WhatsApp</a><button class="btn" onclick="markSent('${k}',$('#draft').value)">Mark as sent</button></div>
+        <div class="small" style="margin-top:6px">Send it yourself in WhatsApp, then click "Mark as sent". If no sequence is running, follow-ups get scheduled for you.</div>`
+        :'<div class="small">No UK WhatsApp number for this lead.</div>')
+      :(l.email&&l.can_email?`<label>Subject (blank = reply in the existing thread)</label><input id="esubj" value="${esc(keepVals.esubj||'')}" placeholder="${esc(l.seq.email?.subject?'Re: '+l.seq.email.subject:'About the '+l.business+' website')}">
+        <label>Email <span class="small" id="esrc"></span></label><textarea id="ebody" style="min-height:140px">${esc(keepVals.ebody||'')}</textarea>
+        <div class="row" style="margin-top:8px"><button class="btn" id="edbtn" onclick="draftEmail('${k}')">✨ Draft with AI</button><button class="btn primary" id="esend" onclick="sendEmail('${k}')">Send email now</button></div>
+        <div class="small" style="margin-top:6px">Sends from your mailbox right away, threaded with earlier emails. The opt-out line is added automatically.</div>`
+        :'<div class="small">No usable email for this lead (none verified, bounced or opted out).</div>')}
+    </div>
+    <div class="card sec"><h3>Problems found (pitch points) · score ${s.unfinished_score} · entry £${l.entry_price}</h3>
+      ${s.issues.map(i=>`<div class="issue"><b>${esc(ISSUE[i.issue]||i.issue)}</b> · ${esc(i.detail)}</div>`).join('')||'<div class="small">None found.</div>'}</div>
+    <div class="card sec"><h3>Verified contacts</h3>
+      ${s.whatsapp.map(w=>`<div class="line"><span><span class="ok">✓</span> WhatsApp ${fmtNum(w.number)}</span><span class="small">${esc(w.basis)}</span></div>`).join('')}
+      ${s.phones.filter(p=>p.kind==='landline').map(p=>`<div class="line"><span><span class="ok">✓</span> Landline ${esc(p.e164)}</span><span class="small">${p.sources} sources</span></div>`).join('')}
+      ${s.emails.map(e=>`<div class="line"><span><span class="ok">✓</span> ${esc(e.email)}</span><span class="small">mail server ${e.mx?'unverified':'confirmed'}</span></div>`).join('')}
+      ${s.socials.map(x=>`<div class="line"><span><span class="ok">✓</span> <a target="_blank" href="${esc(x.url)}">${esc(x.network)}</a></span><span class="small">${esc(x.handle.slice(0,40))}</span></div>`).join('')}
+      <div class="small" style="margin-top:8px">UK evidence: ${esc(s.uk_signals.slice(0,4).join(' · ')||'none')} · checked ${esc(s.checked_at)}</div></div>
+    <div class="card sec"><h3>Details</h3>
+      <label>Business name (used in messages)</label><div class="row"><input id="cname" value="${esc(l.business)}" style="flex:1"><button class="btn sm" onclick="patch('${k}',{custom_name:$('#cname').value})">Save</button></div>
+      <label>Notes</label><textarea style="min-height:60px" onblur="patch('${k}',{notes:this.value},true)">${esc(l.notes)}</textarea>
+      <div class="row" style="margin-top:10px"><button class="btn sm" onclick="doScan(['${s.site}'])">Re-scan site</button>
+        <button class="btn sm danger" onclick="deleteLeads(['${l.key}'],'${esc(l.business).replace(/'/g,'')}')">🗑 Delete lead</button></div></div>
+  </div>`;
+  $('#drawer').classList.add('open');$('#dbg').classList.add('open');
+  const th=$('#thread');if(th)th.scrollTop=th.scrollHeight;
+  if(l.unread&&!keep) api('/api/leads/'+k,{method:'PATCH',body:{}}).then(()=>{l.unread=false;});
+}
+function closeDrawer(){S.open=null;$('#drawer').classList.remove('open');$('#dbg').classList.remove('open');refresh();}
+$('#dbg').onclick=closeDrawer;
+async function patch(k,body,quiet){try{await api('/api/leads/'+k,{method:'PATCH',body});if(!quiet)toast('Updated');refresh();}catch(e){toast(e.message)}}
+async function seqAct(k,ch,action){try{await api(`/api/leads/${k}/sequence`,{method:'POST',body:{channel:ch,action}});toast(`${ch==='email'?'Email':'WhatsApp'} sequence: ${action}`);refresh();}catch(e){toast(e.message)}}
+async function markSent(k,text){if(!text||!text.trim())return toast('Message is empty');
+  await api(`/api/leads/${k}/sent`,{method:'POST',body:{text}});if($('#draft'))$('#draft').value='';toast('Logged as sent. Next follow-up scheduled.');refresh();}
+async function draftReply(k){const t=$('#their').value.trim();if(!t)return toast('Paste their message first');
+  const b=$('#dbtn');b.classList.add('dis');b.textContent='Drafting…';
+  try{const r=await api(`/api/leads/${k}/reply`,{method:'POST',body:{text:t}});$('#their').value='';await refresh();$('#draft').value=r.draft;$('#dsrc').textContent='· drafted by '+r.source;
+    if(r.dnc)toast('They opted out. Lead marked Do not contact');}catch(e){toast(e.message)}
+  b.classList.remove('dis');b.textContent='✨ Log reply + draft my answer';}
+async function draftEmail(k){const b=$('#edbtn');b.classList.add('dis');b.textContent='Drafting…';
+  try{const r=await api(`/api/leads/${k}/draft?channel=email`,{method:'POST'});$('#ebody').value=r.draft;$('#esrc').textContent='· drafted by '+r.source;}catch(e){toast(e.message)}
+  b.classList.remove('dis');b.textContent='✨ Draft with AI';}
+async function sendEmail(k){const body=$('#ebody').value.trim();if(!body)return toast('Write the email first');
+  if(!confirm('Send this email now?'))return;const b=$('#esend');b.classList.add('dis');
+  try{await api(`/api/leads/${k}/email`,{method:'POST',body:{text:body,channel:'email',subject:$('#esubj').value||null}});$('#ebody').value='';$('#esubj').value='';toast('Email sent');refresh();}catch(e){toast(e.message)}
+  b.classList.remove('dis');}
+
+refresh().then(takeCollected); window.addEventListener('hashchange',()=>refresh().then(takeCollected));
+setInterval(async()=>{ if(document.hidden)return;
+  if(activeJob()){Object.assign(S,await api('/api/state'));if(!activeJob()){toast('Scan finished');return refresh();}
+    const j=$('#job');if(j)j.outerHTML=jobCard();return;}
+  if(!S.open&&['today','dash'].includes(S.view)&&!S.dirty.size&&!document.activeElement?.closest('.draft')) refresh();
+},20000);
+setInterval(async()=>{if(activeJob()){Object.assign(S,await api('/api/state'));const j=$('#job');if(j)j.outerHTML=jobCard();if(!activeJob())refresh();}},3000);
+</script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "Scout WhatsApp Sender",
+  "version": "1.0.0",
+  "description": "Sends Scout's WhatsApp follow-ups through your own WhatsApp Web, and passes replies back to Scout.",
+  "permissions": ["storage"],
+  "host_permissions": ["http://localhost/*", "http://127.0.0.1/*", "https://web.whatsapp.com/*"],
+  "optional_host_permissions": ["http://*/*", "https://*/*"],
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [{ "matches": ["https://web.whatsapp.com/*"], "js": ["content.js"], "run_at": "document_idle" }],
+  "action": { "default_title": "Scout WhatsApp Sender", "default_popup": "popup.html" }
+}
