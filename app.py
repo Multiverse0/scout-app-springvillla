@@ -10,10 +10,10 @@ from urllib.parse import urlparse
 import urllib.parse
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse, PlainTextResponse
 from pydantic import BaseModel
 
-import stopper, scout, dm_agent, outreach, autopilot, whatsapp_auto, discovery, companies, convo, platforms, quality
+import stopper, scout, dm_agent, outreach, autopilot, whatsapp_auto, discovery, companies, convo, platforms, quality, instagram
 
 HERE = Path(__file__).parent
 DATA_DIR = Path(os.environ.get("SCOUT_DATA_DIR", HERE)); DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -262,7 +262,7 @@ def _token(): return hmac.new(PASSWORD.encode(), b"scout-login", hashlib.sha256)
 @app.middleware("http")
 async def auth(request: Request, call_next):
     p = request.url.path
-    if not PASSWORD or p in ("/login", "/health", "/api/wa/incoming") or p.startswith("/api/waweb/") or request.cookies.get("scout_auth") == _token():
+    if not PASSWORD or p in ("/login", "/health", "/api/wa/incoming", "/api/instagram/webhook") or p.startswith("/api/waweb/") or request.cookies.get("scout_auth") == _token():
         return await call_next(request)
     if p.startswith("/api/"): return JSONResponse({"detail": "login required"}, status_code=401)
     return RedirectResponse("/login")
@@ -484,6 +484,105 @@ async def wa_incoming(request: Request):
     log(f"whatsapp reply: {l['key']}"); queue_autodraft(l["key"])
     return {"ok": True, "matched": True}
 
+class InstagramReplyReq(BaseModel):
+    text: str
+
+@app.get("/api/instagram/webhook")
+def instagram_webhook_verify(request: Request):
+    cfg = instagram.settings()
+    if not cfg["verify_token"]: raise HTTPException(503, "Instagram webhook verification is not configured")
+    mode = request.query_params.get("hub.mode")
+    token = request.query_params.get("hub.verify_token")
+    challenge = request.query_params.get("hub.challenge", "")
+    if not instagram.verify_challenge(mode, token, cfg["verify_token"]): raise HTTPException(403, "Webhook verification failed")
+    return PlainTextResponse(challenge)
+
+@app.post("/api/instagram/webhook")
+async def instagram_webhook(request: Request):
+    cfg = instagram.settings()
+    if not cfg["app_secret"] or not cfg["account_id"].isdigit() or len(cfg["account_id"]) > 64:
+        raise HTTPException(503, "Instagram webhook is not configured")
+    content_length = request.headers.get("content-length", "")
+    if content_length.isdigit() and int(content_length) > 1_000_000:
+        raise HTTPException(413, "Webhook payload is too large")
+    raw = await request.body()
+    if len(raw) > 1_000_000: raise HTTPException(413, "Webhook payload is too large")
+    if not instagram.verify_signature(raw, request.headers.get("x-hub-signature-256")):
+        raise HTTPException(401, "Invalid Instagram webhook signature")
+    try:
+        payload = json.loads(raw)
+    except (ValueError, UnicodeDecodeError):
+        raise HTTPException(400, "Invalid webhook JSON")
+    if not isinstance(payload, dict): raise HTTPException(400, "Invalid webhook payload")
+
+    incoming = instagram.parse_events(payload, cfg["account_id"])
+    accepted = 0
+    with LOCK:
+        d = load()
+        conversations = d.setdefault("instagram", {}).setdefault("conversations", {})
+        seen = d.setdefault("instagram", {}).setdefault("seen", [])
+        for item in incoming:
+            if item["id"] and item["id"] in seen: continue
+            sender_id = item["sender_id"]
+            convo = conversations.setdefault(sender_id, {
+                "sender_id": sender_id, "username": "", "messages": [], "unread": False,
+                "last_inbound_at": None, "updated_at": None,
+            })
+            if item["username"]: convo["username"] = item["username"]
+            convo["messages"].append({"id": item["id"], "from": "them", "text": item["text"], "at": item["at"]})
+            convo["messages"].sort(key=lambda message: message.get("at") or "")
+            convo["last_inbound_at"] = max(convo.get("last_inbound_at") or "", item["at"])
+            convo["updated_at"] = max(convo.get("updated_at") or "", item["at"])
+            convo["unread"] = True
+            if item["id"]: seen.append(item["id"])
+            accepted += 1
+        d["instagram"]["seen"] = seen[-10000:]
+        save(d)
+    return {"ok": True, "accepted": accepted}
+
+@app.get("/api/instagram/status")
+def instagram_status(request: Request):
+    return {**instagram.status(), "webhook_url": str(request.base_url).rstrip("/") + "/api/instagram/webhook"}
+
+@app.get("/api/instagram/inbox")
+def instagram_inbox():
+    d = load()
+    conversations = list(d.get("instagram", {}).get("conversations", {}).values())
+    conversations.sort(key=lambda c: c.get("updated_at") or "", reverse=True)
+    return {"conversations": conversations}
+
+@app.post("/api/instagram/conversations/{sender_id}/read")
+def instagram_mark_read(sender_id: str):
+    with LOCK:
+        d = load(); convo = d.get("instagram", {}).get("conversations", {}).get(sender_id)
+        if not convo: raise HTTPException(404, "Instagram conversation not found")
+        convo["unread"] = False; save(d)
+    return {"ok": True}
+
+@app.post("/api/instagram/conversations/{sender_id}/reply")
+def instagram_reply(sender_id: str, message: InstagramReplyReq):
+    text = message.text.strip()
+    if not text or len(text) > 1000: raise HTTPException(400, "Reply must contain 1-1000 characters")
+    if not instagram.status()["configured"]: raise HTTPException(503, "Instagram Messaging API is not configured")
+    d = load(); convo = d.get("instagram", {}).get("conversations", {}).get(sender_id)
+    if not convo: raise HTTPException(404, "Instagram conversation not found")
+    if not instagram.can_reply(convo): raise HTTPException(403, "The Instagram 24-hour messaging window has expired")
+    try:
+        result = instagram.send_message(sender_id, text)
+    except ValueError as error:
+        raise HTTPException(400, str(error))
+    except RuntimeError as error:
+        raise HTTPException(502, str(error))
+    with LOCK:
+        d = load(); convo = d.get("instagram", {}).get("conversations", {}).get(sender_id)
+        if not convo: raise HTTPException(404, "Instagram conversation not found")
+        sent_at = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds")
+        convo["messages"].append({"id": str(result.get("message_id") or ""), "from": "me", "text": text, "at": sent_at})
+        convo["updated_at"] = sent_at
+        convo["unread"] = False
+        save(d)
+    return {"ok": True, "message_id": result.get("message_id")}
+
 class ScanReq(BaseModel):
     urls: list[str]; pages: int = 3
 class SearchReq(BaseModel):
@@ -532,6 +631,7 @@ def state():
     eng["discovery"] = {"pool": discovery.pool_stats(d), "sources": d.get("discovery", {}), "refreshing": _pool_busy.is_set(),
                         "providers": [n for n, _ in discovery.keyword_providers(d["settings"])]}
     return {"settings": s, "leads": list(d["leads"].values()), "jobs": d["jobs"], "presets": preset_queries(d["settings"]), "platforms": [{"domain": dm, "label": lb, "on": dm in platforms.enabled(d["settings"])} for dm, lb, _ in platforms.PLATFORMS],
+            "instagram": instagram.status(),
             "sequences": d["sequences"], "sequence_sets": d["sequence_sets"], "co_unresolved": d["co_unresolved"][-200:],
             "sectors": [{"label": a, "link": companies.europages_link(b)} for a, b in companies.SECTORS], "engine": eng, "suppression": d["suppression"], "log": LOGBUF[-40:]}
 

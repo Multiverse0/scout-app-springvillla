@@ -1,4 +1,4 @@
-# Scout: unfinished UK sites on Base44, Lovable, Replit, Emergent, Bolt, Netlify, Vercel… → WhatsApp + email → clients
+# Scout: unfinished UK sites on Base44, Lovable, Replit, Emergent, Bolt, Netlify, Vercel… → WhatsApp + email + Instagram replies → clients
 
 ## Deploy on Railway from GitHub
 Railway runs Scout and its WhatsApp Web browser as two services. The WhatsApp service needs its own persistent volume to keep the linked-device session after deploys.
@@ -17,6 +17,22 @@ Railway runs Scout and its WhatsApp Web browser as two services. The WhatsApp se
    Do not add a public domain to this service.
 4. Generate the `WA_SECRET` locally (for example, `python -c "import secrets; print(secrets.token_hex(32))"`), then paste the same value into both services. Keep `SCOUT_PASSWORD` separate. Railway supplies `PORT` to both containers.
 5. After both services are deployed, open the Scout public URL and log in. Connect WhatsApp from **Settings → WhatsApp automation** by scanning the QR code. Search works without SearXNG; add a private SearXNG service separately if you want that search provider.
+
+### Connect Instagram messaging
+Instagram is for conversations started by people messaging your professional account. Scout does not send cold Instagram DMs or automatic follow-ups; replies are sent manually from the **Instagram inbox** and only within Meta's 24-hour messaging window.
+
+1. Use an Instagram professional account linked to a Facebook Page. In Meta for Developers, configure the Messenger API for Instagram with the `instagram_manage_messages` permission and subscribe the account to the `messages` webhook field. Meta may require app review/business verification before messaging works outside app roles.
+2. In the **Scout** service's environment, set:
+   - `INSTAGRAM_ACCOUNT_ID` — the Instagram professional account ID.
+   - `INSTAGRAM_ACCESS_TOKEN` — a Page access token with Instagram messaging permission.
+   - `INSTAGRAM_APP_SECRET` — the Meta app secret, used to verify webhook signatures.
+   - `INSTAGRAM_VERIFY_TOKEN` — a private value you choose; enter the same value in the Meta webhook setup.
+   - `INSTAGRAM_GRAPH_VERSION` — optional Graph API version (defaults to `v22.0`).
+   Keep these values in Railway/server environment variables, never in Git or a browser form.
+3. Redeploy Scout and open **Settings → Instagram Messaging API**. Copy the displayed HTTPS webhook callback URL into the Meta app's Instagram messaging webhook configuration, use the same verify token, and subscribe to `messages`. Subscribe the Instagram account to the app as required in Meta's dashboard.
+4. Send a test DM to the Instagram account. It should appear in **Instagram inbox**. Open it, write a reply, and click **Send Instagram reply**.
+
+The inbox is separate from site leads because Instagram's recipient IDs are scoped to the Meta app. The API does not provide general cold-DM access to arbitrary handles.
 
 The `/data` volume keeps Scout's database and backups across deploys; `/session` keeps the WhatsApp login. A new Railway volume starts with an empty database—the local `scout_data.json` and exported lead files are intentionally not included in the Docker image or Git. Back up or migrate local data separately before switching over.
 
@@ -168,6 +184,6 @@ so nothing starts again until you switch it back on. Approved WhatsApp replies t
 - **UK rules (PECR/GDPR):** cold email to **limited companies** is allowed if you identify yourself and offer an opt-out, which Scout does on every email. **Sole traders and partnerships** count as individuals, so unsolicited marketing email to them needs consent. Be careful with personal-looking addresses (e.g. a Gmail address that is clearly one person's). Always honour opt-outs, which Scout does automatically. This isn't legal advice; see ico.org.uk for details.
 
 ## Files
-`app.py` server · `index.html` dashboard · `scout.py` scraper and verification · `outreach.py` email and follow-up engine ·
+`app.py` server · `index.html` dashboard · `instagram.py` official Instagram Messaging API/webhook · `scout.py` scraper and verification · `outreach.py` email and follow-up engine ·
 `autopilot.py` daily target · `discovery.py` + `searxng/` finding sites · `companies.py` Europages companies · `whatsapp_auto.py` + `wa-service/` WhatsApp sending · `dm_agent.py` message logic · `DM_PLAYBOOK.md` the AI's instructions ·
 `scout_data.json` **all your data, so back this file up**

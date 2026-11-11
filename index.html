@@ -124,6 +124,7 @@ pre.prev{white-space:pre-wrap;background:var(--panel2);padding:12px;border-radiu
     <button data-v="companies">Companies <span class="count" id="c-co">0</span></button>
     <button data-v="pipeline">Pipeline</button>
     <button data-v="sequences">Sequences</button>
+    <button data-v="instagram">Instagram inbox</button>
     <button data-v="settings">Settings</button>
     <button id="pausebtn" onclick="stopAll()" style="all:unset;cursor:pointer;box-sizing:border-box;display:block;width:100%;text-align:center;margin-top:16px;padding:12px;border-radius:10px;font-weight:800;letter-spacing:.5px;background:var(--red);color:#fff">■ STOP</button>
     <div class="engine-mini" id="engmini"></div>
@@ -136,8 +137,8 @@ pre.prev{white-space:pre-wrap;background:var(--panel2);padding:12px;border-radiu
 <div class="toast" id="toast"></div>
 
 <script>
-const S={view:'today',leads:[],jobs:{},settings:{email:{}},presets:[],sequences:{email:[],whatsapp:[]},engine:{},today:{replies:[],wa_due:[],upcoming:[],recent:[],events:[]},
-  filter:{uk:true,status:'',q:'',ch:'',seq:'',score:0,sort:'quality',page:0,unread:false,minq:0},cofilter:{q:'',status:'',ch:'',seq:'',score:0,sort:'quality',page:0,minq:0},open:null,found:[],tab:'whatsapp',bulk:{whatsapp:true,email:true},seqEdit:null,prevKey:''};
+const S={view:'today',leads:[],jobs:{},settings:{email:{}},instagram:{},presets:[],sequences:{email:[],whatsapp:[]},engine:{},today:{replies:[],wa_due:[],upcoming:[],recent:[],events:[]},
+  filter:{uk:true,status:'',q:'',ch:'',seq:'',score:0,sort:'quality',page:0,unread:false,minq:0},cofilter:{q:'',status:'',ch:'',seq:'',score:0,sort:'quality',page:0,minq:0},open:null,found:[],tab:'whatsapp',bulk:{whatsapp:true,email:true},seqEdit:null,prevKey:'',igOpen:''};
 const STATUSES=['new','contacted','talking','won','lost','later','do_not_contact'];
 const LABEL={new:'New',contacted:'Contacted',talking:'Talking',won:'Won',lost:'Lost',later:'Later',do_not_contact:'Do not contact'};
 const ISSUE={broken_whatsapp_button:'Broken WhatsApp button',fake_phone_number:'Fake phone number',broken_call_button:'Empty call button',
@@ -493,6 +494,7 @@ function render(){
   }
   if(S.view==='sequences') renderSequences(m);
   if(S.view==='companies'){ renderCompanies(m); setupBookmarklet(); }
+  if(S.view==='instagram') renderInstagram(m);
   if(S.view==='settings') renderSettings(m);
   if(S.engine.stopping) m.insertAdjacentHTML('afterbegin',pausedBanner());
   const pb=$('#pausebtn'); if(pb){pb.textContent=S.engine.stopping?'Stopping…':'■ STOP';pb.style.opacity=S.engine.stopping?.6:1;}
@@ -616,9 +618,49 @@ async function coRun(){const items=S.co.parsed.filter(c=>c.sel);
 async function coEnroll(){if(!confirm('Start the company email sequence for every new company with a poor website and a verified email?'))return;
   const r=await api('/api/co/enroll?min_quality='+(S.settings.co_auto?.min_quality??60)+'&min_score='+Math.max(S.cofilter.score||0,1),{method:'POST',body:{channels:['email']}});toast(`Started ${r.email} email sequences`);refresh();}
 
+async function renderInstagram(m){
+  m.innerHTML='<h1>Instagram inbox</h1><div class="empty">Loading Instagram messages…</div>';
+  try{
+    const [status,inbox]=await Promise.all([api('/api/instagram/status'),api('/api/instagram/inbox')]);
+    if(S.view!=='instagram')return;
+    const conversations=inbox.conversations||[];
+    let active=conversations.find(c=>c.sender_id===S.igOpen);
+    if(!active&&conversations.length){active=conversations[0];S.igOpen=active.sender_id;}
+    const name=c=>c.username?'@'+c.username:'Instagram user '+c.sender_id.slice(-6);
+    m.innerHTML=`<h1>Instagram inbox</h1><p class="sub">Reply to people who have messaged your professional account. No cold DMs or automated follow-ups.</p>
+      ${status.configured?'':'<div class="warnbox" style="margin-bottom:14px">Instagram is not configured yet. Add the required server environment variables in Settings, then configure the Meta webhook.</div>'}
+      <div class="row between" style="margin-bottom:12px"><span class="small">${conversations.length} conversation${conversations.length===1?'':'s'}${status.configured?' · API configured':' · API not configured'}</span><button class="btn sm" onclick="renderInstagram($('#main'))">Refresh inbox</button></div>
+      <div class="grid g2" style="align-items:start;grid-template-columns:minmax(230px,1fr) minmax(0,2fr)">
+        <div class="card" style="padding:8px">${conversations.length?conversations.map(c=>`<button onclick="openInstagram('${c.sender_id}')" style="all:unset;box-sizing:border-box;cursor:pointer;display:block;width:100%;padding:12px;border-bottom:1px solid var(--line);background:${active?.sender_id===c.sender_id?'var(--panel2)':'transparent'}">
+          <div class="row between"><b>${esc(name(c))}</b>${c.unread?'<span class="pill p-contacted">New</span>':''}</div>
+          <div class="small" style="margin-top:5px">${esc((c.messages||[]).at(-1)?.text||'')}</div><div class="small" style="margin-top:4px">${esc(when(c.updated_at))}</div></button>`).join(''):'<div class="empty">No Instagram conversations yet. New DMs will appear here after the Meta webhook is connected.</div>'}</div>
+        <div class="card">${active?`<div class="row between"><div><b>${esc(name(active))}</b><div class="small">Instagram conversation</div></div><span class="small">${instagramCanReply(active)?'Reply window open':'Reply window expired'}</span></div>
+          <div class="thread" id="ig-thread" style="max-height:460px;margin:12px 0">${(active.messages||[]).map(msg=>`<div class="bub ${msg.from==='me'?'me':'them'}">${esc(msg.text)}<div class="t">${msg.from==='me'?'You':'Them'} · ${esc(when(msg.at))}</div></div>`).join('')}</div>
+          ${status.configured&&instagramCanReply(active)?`<label for="ig-text">Reply (sent only when you click Send)</label><textarea id="ig-text" maxlength="1000" placeholder="Write a reply…"></textarea><div class="row" style="margin-top:8px"><button class="btn primary" onclick="sendInstagramReply('${active.sender_id}')">Send Instagram reply</button></div>`:'<div class="small">Replies can be sent only while Meta’s 24-hour messaging window is open and the API is configured.</div>'}`
+          :'<div class="empty">Choose a conversation to view it here.</div>'}</div>
+      </div>`;
+    const thread=$('#ig-thread');if(thread)thread.scrollTop=thread.scrollHeight;
+  }catch(e){if(S.view==='instagram')m.innerHTML=`<h1>Instagram inbox</h1><div class="warnbox">${esc(e.message)}</div>`;}
+}
+function instagramCanReply(conversation){const age=Date.now()-new Date(conversation?.last_inbound_at||'').getTime();return age>=0&&age<24*60*60*1000;}
+async function openInstagram(senderId){
+  S.igOpen=senderId;
+  try{await api(`/api/instagram/conversations/${encodeURIComponent(senderId)}/read`,{method:'POST'});}catch(e){toast(e.message);}
+  renderInstagram($('#main'));
+}
+async function sendInstagramReply(senderId){
+  const text=$('#ig-text')?.value.trim();if(!text)return toast('Write a reply first');
+  if(text.length>1000)return toast('Replies are limited to 1000 characters');
+  if(!confirm('Send this reply through Instagram?'))return;
+  const button=document.querySelector('[onclick^="sendInstagramReply("]');if(button){button.disabled=true;button.textContent='Sending…';}
+  try{await api(`/api/instagram/conversations/${encodeURIComponent(senderId)}/reply`,{method:'POST',body:{text}});
+    toast('Instagram reply sent');renderInstagram($('#main'));
+  }catch(e){toast(e.message);if(button){button.disabled=false;button.textContent='Send Instagram reply';}}
+}
+
 // ---------- settings ----------
 function renderSettings(m){
-  const s=S.settings,e=s.email;
+  const s=S.settings,e=s.email,ig=S.instagram||{};
   m.innerHTML=`<h1>Settings</h1><p class="sub">Stored only in scout_data.json on this computer.</p>
   <div class="grid g2" style="align-items:start">
   <div class="card"><h2>You</h2>
@@ -718,6 +760,15 @@ function renderSettings(m){
         <label class="row" style="color:var(--text);gap:8px"><input type="checkbox" id="w-wd" ${s.whatsapp.weekdays_only?'checked':''}> Weekdays only</label>
         <div style="margin-top:12px"><button class="btn primary" onclick="saveWA()">Save WhatsApp settings</button></div>
       </div></div></div>
+  <div class="card" style="grid-column:1/-1"><h2>📷 Instagram Messaging API</h2>
+    <div class="${ig.configured?'ok':'warnbox'}">${ig.configured?'Configured. Incoming DMs appear in the Instagram inbox.':'Not configured. Add the Meta credentials as environment variables on the Scout service.'}</div>
+    <div class="small" style="margin-top:8px">This is for conversations people start with your Instagram professional account. Scout does not cold-DM prospects or send follow-ups; replies are sent only when you choose Send, within Meta's 24-hour messaging window.</div>
+    <label>Meta webhook callback URL</label><input readonly value="${esc(location.origin)}/api/instagram/webhook" onclick="this.select()">
+    <div class="small" style="margin-top:8px">Add the callback URL in your Meta app's Instagram messaging webhook settings and subscribe the professional account to the <code>messages</code> webhook field.</div>
+    ${ig.missing?.length?`<div class="small" style="margin-top:8px">Missing environment variables: ${ig.missing.map(esc).join(', ')}</div>`:''}
+    <div class="small" style="margin-top:8px">Configure secrets on the Scout server (not in this page or Git): INSTAGRAM_ACCOUNT_ID, INSTAGRAM_ACCESS_TOKEN, INSTAGRAM_APP_SECRET, INSTAGRAM_VERIFY_TOKEN. Optional: INSTAGRAM_GRAPH_VERSION.</div>
+    <button class="btn sm" style="margin-top:10px" onclick="go('instagram')">Open Instagram inbox</button>
+  </div>
   </div>`;
   waBox();
 }
