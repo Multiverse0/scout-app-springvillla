@@ -4,7 +4,7 @@
 Railway runs Scout and its WhatsApp Web browser as two services. The WhatsApp service needs its own persistent volume to keep the linked-device session after deploys.
 
 1. Push this project to a **private GitHub repository** (the root `.gitignore` excludes local leads, settings, sessions, and logs). In Railway, create a project from that repository.
-2. Deploy the repository root as the **Scout** service. Railway will use `Dockerfile`. Add a volume mounted at `/data`, set the healthcheck path to `/health`, and add:
+2. Deploy the repository root as the **Scout** service. Railway will use `Dockerfile`. Add a persistent volume mounted at `/data` before deploying, set the healthcheck path to `/health`, and add:
    - `SCOUT_PASSWORD` — a strong dashboard password.
    - `WA_SECRET` — a random secret token, also set on the WhatsApp service.
    - `SCOUT_DATA_DIR=/data`
@@ -34,7 +34,7 @@ Instagram is for conversations started by people messaging your professional acc
 
 The inbox is separate from site leads because Instagram's recipient IDs are scoped to the Meta app. The API does not provide general cold-DM access to arbitrary handles.
 
-The `/data` volume keeps Scout's database and backups across deploys; `/session` keeps the WhatsApp login. A new Railway volume starts with an empty database—the local `scout_data.json` and exported lead files are intentionally not included in the Docker image or Git. Back up or migrate local data separately before switching over.
+The `/data` volume keeps Scout's database and backups across deploys; `/session` keeps the WhatsApp login. Scout refuses to start on Railway if its configured data directory is not on a mounted volume, rather than silently starting with an empty database after an update. If the database file is missing or unreadable, Scout tries to restore the newest valid backup; an unreadable original is preserved under `backups/unreadable/`. A new Railway volume still starts empty—the local `scout_data.json` and exported lead files are intentionally not included in the Docker image or Git. Back up or migrate local data separately before switching to a new volume.
 
 ## 0. Run it 24/7 on your Hyonix server (recommended)
 Once it's on the server, everything runs without you: Autopilot, emails, WhatsApp (max 100/day), follow-ups, reply detection and daily backups.

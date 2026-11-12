@@ -16,7 +16,24 @@ from pydantic import BaseModel
 import stopper, scout, dm_agent, outreach, autopilot, whatsapp_auto, discovery, companies, convo, platforms, quality, instagram
 
 HERE = Path(__file__).parent
-DATA_DIR = Path(os.environ.get("SCOUT_DATA_DIR", HERE)); DATA_DIR.mkdir(parents=True, exist_ok=True)
+DATA_DIR = Path(os.environ.get("SCOUT_DATA_DIR", HERE))
+if os.environ.get("RAILWAY_ENVIRONMENT"):
+    data_path = DATA_DIR.resolve()
+    mount_info = Path("/proc/self/mountinfo")
+    mounted_data = False
+    if mount_info.exists():
+        for line in mount_info.read_text().splitlines():
+            fields = line.split(" - ", 1)[0].split()
+            if len(fields) < 5:
+                continue
+            mount_path = re.sub(r"\\([0-7]{3})", lambda m: chr(int(m.group(1), 8)), fields[4])
+            mount = Path(mount_path)
+            if mount != Path("/") and (data_path == mount or mount in data_path.parents):
+                mounted_data = True
+                break
+    if not mounted_data:
+        raise RuntimeError(f"No persistent volume is mounted for {DATA_DIR}. Attach a Railway volume at this path before starting Scout.")
+DATA_DIR.mkdir(parents=True, exist_ok=True)
 DATA = DATA_DIR / "scout_data.json"
 if not DATA.exists() and DATA_DIR != HERE and (HERE / "scout_data.json").exists():
     shutil.copy(HERE / "scout_data.json", DATA)          # first run on a server: start with the leads you already have
@@ -64,10 +81,57 @@ def load():
     mt = DATA.stat().st_mtime_ns if DATA.exists() else None
     if _CACHE["d"] is not None and mt == _CACHE["mtime"]:
         return _CACHE["d"]
-    d = json.loads(DATA.read_text()) if DATA.exists() else {}
+    if DATA.exists():
+        try:
+            d = _read_data_file(DATA)
+        except (OSError, ValueError, json.JSONDecodeError) as e:
+            _preserve_unreadable_data()
+            d = _restore_backup(e)
+    else:
+        try:
+            d = _restore_backup()
+        except FileNotFoundError:
+            d = {}
     d = _migrate(d)
-    _CACHE.update(mtime=mt, d=d)
+    _CACHE.update(mtime=DATA.stat().st_mtime_ns if DATA.exists() else None, d=d)
     return d
+
+def _read_data_file(path):
+    d = json.loads(path.read_text(encoding="utf-8"))
+    mapping_fields = ("settings", "leads", "jobs", "sequences", "sequence_sets")
+    list_fields = ("suppression", "sent_log", "events", "co_unresolved")
+    if (not isinstance(d, dict)
+            or any(key in d and not isinstance(d[key], dict) for key in mapping_fields)
+            or any(key in d and not isinstance(d[key], list) for key in list_fields)
+            or any(not isinstance(lead, dict) for lead in d.get("leads", {}).values())):
+        raise ValueError(f"{path.name} has an invalid data structure")
+    return d
+
+def _preserve_unreadable_data():
+    if not DATA.exists():
+        return
+    recovery_dir = DATA_DIR / "backups" / "unreadable"
+    recovery_dir.mkdir(parents=True, exist_ok=True)
+    saved = recovery_dir / f"scout_data-{datetime.datetime.now().strftime('%Y%m%d-%H%M%S-%f')}.json"
+    shutil.copy2(DATA, saved)
+
+def _restore_backup(cause=None):
+    backups = DATA_DIR / "backups"
+    candidates = sorted(backups.glob("scout_data-*.json"),
+                        key=lambda path: path.stat().st_mtime_ns, reverse=True) if backups.exists() else []
+    for candidate in candidates:
+        try:
+            d = _read_data_file(candidate)
+        except (OSError, ValueError, json.JSONDecodeError):
+            continue
+        _write_data_file(d)
+        log(f"restored Scout data from backup {candidate.name}")
+        return d
+    if cause is not None:
+        raise RuntimeError("Scout data is unreadable and no valid backup was found; the original file was preserved.") from cause
+    if candidates:
+        raise RuntimeError("Scout data is missing and no valid backup was found; refusing to start with an empty database.")
+    raise FileNotFoundError("No Scout data backups found")
 
 def _migrate(d):
     d.setdefault("settings", {"name": "", "portfolio": "", "gemini_key": "", "serper_key": ""})
@@ -103,8 +167,20 @@ def _migrate(d):
     return d
 
 def save(d):
-    tmp = DATA.with_suffix(".tmp"); tmp.write_text(json.dumps(d, separators=(",", ":"))); tmp.replace(DATA)
+    _write_data_file(d)
     _CACHE.update(mtime=DATA.stat().st_mtime_ns, d=d)
+
+def _write_data_file(d):
+    tmp = DATA.with_suffix(".tmp")
+    try:
+        with tmp.open("w", encoding="utf-8") as f:
+            json.dump(d, f, separators=(",", ":"))
+            f.flush()
+            os.fsync(f.fileno())
+        tmp.replace(DATA)
+    finally:
+        if tmp.exists():
+            tmp.unlink()
 
 def apply_settings(s):
     dm_agent.ME["name"] = s.get("name") or "YOUR_NAME"
