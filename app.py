@@ -19,11 +19,17 @@ HERE = Path(__file__).parent
 DATA_DIR = Path(os.environ.get("SCOUT_DATA_DIR", HERE))
 if os.environ.get("RAILWAY_ENVIRONMENT"):
     volume_path = os.environ.get("RAILWAY_VOLUME_MOUNT_PATH")
-    if not volume_path:
-        raise RuntimeError("Railway did not provide RAILWAY_VOLUME_MOUNT_PATH. Attach a persistent volume to the Scout service before starting.")
-    data_path, volume_path = DATA_DIR.resolve(), Path(volume_path).resolve()
-    if data_path != volume_path and volume_path not in data_path.parents:
-        raise RuntimeError(f"Scout data directory {data_path} is outside the Railway volume at {volume_path}. Set SCOUT_DATA_DIR to the volume mount path or a directory inside it.")
+    if volume_path:
+        data_path, volume_path = DATA_DIR.resolve(), Path(volume_path).resolve()
+        if data_path != volume_path and volume_path not in data_path.parents:
+            raise RuntimeError(f"Scout data directory {data_path} is outside the Railway volume at {volume_path}. Set SCOUT_DATA_DIR to the volume mount path or a directory inside it.")
+    else:
+        print(
+            f"WARNING: Railway did not provide RAILWAY_VOLUME_MOUNT_PATH. "
+            f"Scout will use {DATA_DIR}, but data may not persist across redeploys "
+            "unless a Railway volume is mounted there.",
+            flush=True,
+        )
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 DATA = DATA_DIR / "scout_data.json"
 if not DATA.exists() and DATA_DIR != HERE and (HERE / "scout_data.json").exists():
