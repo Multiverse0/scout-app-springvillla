@@ -18,21 +18,12 @@ import stopper, scout, dm_agent, outreach, autopilot, whatsapp_auto, discovery, 
 HERE = Path(__file__).parent
 DATA_DIR = Path(os.environ.get("SCOUT_DATA_DIR", HERE))
 if os.environ.get("RAILWAY_ENVIRONMENT"):
-    data_path = DATA_DIR.resolve()
-    mount_info = Path("/proc/self/mountinfo")
-    mounted_data = False
-    if mount_info.exists():
-        for line in mount_info.read_text().splitlines():
-            fields = line.split(" - ", 1)[0].split()
-            if len(fields) < 5:
-                continue
-            mount_path = re.sub(r"\\([0-7]{3})", lambda m: chr(int(m.group(1), 8)), fields[4])
-            mount = Path(mount_path)
-            if mount != Path("/") and (data_path == mount or mount in data_path.parents):
-                mounted_data = True
-                break
-    if not mounted_data:
-        raise RuntimeError(f"No persistent volume is mounted for {DATA_DIR}. Attach a Railway volume at this path before starting Scout.")
+    volume_path = os.environ.get("RAILWAY_VOLUME_MOUNT_PATH")
+    if not volume_path:
+        raise RuntimeError("Railway did not provide RAILWAY_VOLUME_MOUNT_PATH. Attach a persistent volume to the Scout service before starting.")
+    data_path, volume_path = DATA_DIR.resolve(), Path(volume_path).resolve()
+    if data_path != volume_path and volume_path not in data_path.parents:
+        raise RuntimeError(f"Scout data directory {data_path} is outside the Railway volume at {volume_path}. Set SCOUT_DATA_DIR to the volume mount path or a directory inside it.")
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 DATA = DATA_DIR / "scout_data.json"
 if not DATA.exists() and DATA_DIR != HERE and (HERE / "scout_data.json").exists():
