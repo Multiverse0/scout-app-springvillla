@@ -702,6 +702,7 @@ function renderSettings(m){
       <div><label>Send from (UK hour)</label><input id="e-sh1" type="number" value="${e.start_hour}"></div><div><label>Send until (UK hour)</label><input id="e-sh2" type="number" value="${e.end_hour}"></div>
       <div><label>Gap between emails, min seconds</label><input id="e-g1" type="number" value="${e.gap_min_s}"></div><div><label>Gap, max seconds</label><input id="e-g2" type="number" value="${e.gap_max_s}"></div>
     </div>
+    <div class="small">Default is 5–15 seconds. Sending remains sequential and subject to your provider’s limits and daily cap.</div>
     <label class="row" style="color:var(--text);gap:8px"><input type="checkbox" id="e-wd" ${e.weekdays_only?'checked':''}> Weekdays only</label>
     <div class="row" style="margin-top:14px"><button class="btn primary" onclick="saveEmail()">Save email settings</button><button class="btn" onclick="testEmail()">Send test email to myself</button><button class="btn" onclick="checkInbox()">Test inbox connection</button></div>
     <div class="small" style="margin-top:10px">Gmail/Workspace: turn on 2-Step Verification, then create an App Password at myaccount.google.com/apppasswords. Zoho: Settings → Security → App Passwords.</div>

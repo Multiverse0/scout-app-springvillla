@@ -72,6 +72,11 @@ def load():
 def _migrate(d):
     d.setdefault("settings", {"name": "", "portfolio": "", "gemini_key": "", "serper_key": ""})
     d["settings"].setdefault("email", {})
+    if d.get("email_speed_version", 0) < 1:
+        email_settings = d["settings"]["email"]
+        if email_settings.get("gap_min_s", 60) == 60 and email_settings.get("gap_max_s", 180) == 180:
+            email_settings["gap_min_s"], email_settings["gap_max_s"] = 5, 15
+        d["email_speed_version"] = 1
     d["settings"]["email"] = {**outreach.DEFAULT_EMAIL_SETTINGS, **d["settings"]["email"]}
     d["settings"]["autopilot"] = {**autopilot.DEFAULT_AUTOPILOT, **d["settings"].get("autopilot", {})}
     d["settings"]["whatsapp"] = {**whatsapp_auto.DEFAULT_WA, **d["settings"].get("whatsapp", {})}
@@ -179,6 +184,7 @@ def run_scan(job_id, urls, pages):
     log(f"scan stopped after {counter['done']} of {len(urls)} sites" if stopped else f"scan finished: {counter['done']} sites")
 
 ENGINE_EVERY_S = 300
+EMAIL_ENGINE_EVERY_S = 60
 _wake = threading.Event()
 
 def scan_sync(urls, pages=None):
@@ -204,7 +210,7 @@ def engine_loop():
             outreach.tick(load, save, LOCK, log)
         except Exception as e:
             log(f"engine error: {e}")
-        _wake.wait(ENGINE_EVERY_S); _wake.clear()
+        _wake.wait(EMAIL_ENGINE_EVERY_S); _wake.clear()
 
 _ap_wake = threading.Event()
 _AP_LAST = {}
@@ -442,7 +448,7 @@ def progress():
     elif not outreach.email_ready(es): why = "Email isn't set up yet (Settings)."
     elif not outreach.in_window(es): why = f"Outside sending hours ({es['start_hour']}:00–{es['end_hour']}:00 UK" + (", weekdays only)" if es.get("weekdays_only") else ")")
     elif sent_e >= cap_e: why = f"Today's limit reached ({sent_e}/{cap_e}). The rest go out tomorrow."
-    else: why = "Starting within a few minutes (or press Run now)."
+    else: why = "Starting within a minute (or press Run now)."
     return {"email": {**outreach.PROGRESS, "due": len(due_e), "sent_today": sent_e, "cap": cap_e, "waiting_reason": why if due_e else "",
                       "due_list": [{"business": d["leads"][k]["business"], "to": d["leads"][k].get("email")} for k in due_e[:15]]},
             "wa": {**whatsapp_auto.PROGRESS, "due": len(due_w), "auto": ws["auto"], "sent_today": whatsapp_auto.sent_today(d),

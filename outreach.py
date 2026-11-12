@@ -34,7 +34,7 @@ DEFAULT_EMAIL_SETTINGS = {
     "smtp_host": "smtp.gmail.com", "smtp_port": 465, "smtp_user": "", "smtp_pass": "",
     "imap_host": "imap.gmail.com", "imap_port": 993,
     "daily_cap": 30, "start_hour": 9, "end_hour": 17, "weekdays_only": True,
-    "gap_min_s": 60, "gap_max_s": 180, "email_delay_days_if_whatsapp": 1,
+    "gap_min_s": 5, "gap_max_s": 15, "email_delay_days_if_whatsapp": 1,
 }
 
 DEFAULT_SEQUENCES = {
